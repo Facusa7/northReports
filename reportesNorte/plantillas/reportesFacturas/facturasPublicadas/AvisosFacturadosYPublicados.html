@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+
+
+{% block exportacion %}
+
+   <div id="exportacion">
+
+
+       <a href="javascript:void(0)" title="Imprimir Reporte" onclick="printPage()"><img src="{{STATIC_URL}}images/Print-icon.png"></a>
+
+      <!--<a href="/exportarAPdf" title="Ver Reporte en PDF" target="_blank"><img src="{{STATIC_URL}}images/pdf-ico.png"></a>-->
+
+       <a href="/exportarAXls" title="Descargar Reporte en Excel" target="_blank" ><img src="{{STATIC_URL}}images/microsoft-excel.png"></a>
+
+       <a href="javascript:void(0)" title="Ocultar/Ver Gr&aacute;fico" onclick="mostrarGrafico()"><img src="{{STATIC_URL}}images/chart.png"></a>
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+
+    <style type="text/css">
+            .container{
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 13px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 20px;
+            }
+
+            .ui-widget-content .rowClass { color: blue;  font-size:16px; !important;}
+
+            #promocionSinResumir .ui-jqgrid-view  {
+               font-size: 16px !important;
+            }
+
+            #promocionSinResumir .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 25px;
+            }
+    </style>
+
+
+
+<h3>{{tit}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+
+<input type="text" id="tit" style="display:none" value={{titulo}} />
+
+<main id="centroGrid">
+<div id='promocionSinResumir' align="center">
+
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+
+    <p style="width:60%; margin-top: 1%; margin-bottom: 2%">
+        * Hace referencia a los Avisos que no se publican en el rago de fecha seleccionado. Avisos que se publicaron anteriormente o que van a ser publicados.
+    </p>
+</div>
+
+<!--<div id='cuentaCorrienteAgrupadoPor' style="display:none;" align="center">-->
+
+    <!--<table id="listXAviso" class="gridTotales"></table>-->
+<!--</div>-->
+    <!--<div id="result" align="center"></div>-->
+
+
+</main>
+<script type="text/javascript">
+
+
+    $("#list").jqGrid({
+    url:'/json_AvisosFacturadosYPublicados',
+    datatype: 'json',
+    mtype: 'GET',
+    colNames:
+
+    ['Concepto','Importe sin Impuestos'],
+    colModel :[
+      {name:'concepto',index:'concepto', width:500},
+
+      {name:'total',index:'total', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:250}
+    ],
+    rowNum:-1,
+    height: 'auto',
+    //pager: $('#gridpager'),
+
+    sortorder: 'desc',
+    viewrecords: true,
+
+     caption: 'Totales de Avisos Facturados y Publicados',
+     rowattr: function (rd) {
+             if (rd.concepto == 'Total') {
+                 return {"class": "rowClass"};
+             }
+        }
+
+  });
+//});
+
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+
+function mostrarGrafico(){
+
+    if ($('#graficoPromociones').is(':visible')){
+        $('#graficoPromociones').hide('slow');
+    }else{
+        $('#graficoPromociones').show('slow');
+    }
+
+
+}
+
+
+$(function () {
+
+var listaGrafico = {{listaGrafico | safe}}
+console.log(listaGrafico);
+    var data = [];
+
+    for (i=0 ; i < listaGrafico.length; i++){
+        if (listaGrafico[i].porc != 0){
+            data.push([listaGrafico[i].nombre.toString()+' '+parseFloat(listaGrafico[i].porc).toFixed(1)+'%', parseFloat(listaGrafico[i].porc)]);
+        }
+    }
+
+
+    var highchartsOptions = Highcharts.setOptions({
+      lang: {
+            loading: 'Aguarde...',
+            exportButtonTitle: "Exportar",
+            printButtonTitle: "Imprimir",
+            rangeSelectorFrom: "De",
+            rangeSelectorTo: "Hasta",
+            rangeSelectorZoom: "Periodo",
+            printChart: 'Imprimir Grafico',
+            downloadPNG: 'Descargar imagen en PNG',
+            downloadJPEG: 'Descargar imagen en JPEG',
+            downloadPDF: 'Descargar imagen en PDF',
+            downloadSVG: 'Descargar imagen en SVG'
+
+            }
+      }
+  );
+  var is_chrome = /chrome/i.test( navigator.userAgent );
+    if (is_chrome) {
+        bandera = false;
+    }else{
+        bandera = true;
+    }
+
+$('#graficoPromociones').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: 'Gráfico de Avisos Facturados Publicados y Avisos Facturados No Publicados'
+        },
+//        subtitle: {
+//                text: 'Los datos esta expresados en base a Centímetros Netos'
+//        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: data
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        }
+    })
+
+});
+
+</script>
+{% block grafico %}
+
+
+    <script src="{{STATIC_URL}}js/highcharts.js"></script>
+    <script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
+    <script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+
+
+   <div  style="margin:0 auto; margin-top:3%; width:70%;background-color: #fff;" id="graficoPromociones"></div>
+
+{% endblock %}
+
+
+    {% block navegacion %}
+        <div id="navegacion">
+
+                <a id ='btnVariable' href="/listaPromociones/">Volver</a>
+
+
+
+        </div>
+
+    {% endblock %}
+
+
+{% endblock %}
+

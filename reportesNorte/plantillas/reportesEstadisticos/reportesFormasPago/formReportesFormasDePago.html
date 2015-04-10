@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Ingreso de parametros
+{% endblock %}
+
+{% block exportacion %}
+
+{% endblock %}
+
+
+{%block contenido %}
+         <style type="text/css">
+            .container{
+
+                margin-top: -10px;
+            }
+
+            #centro p {
+                margin-top: 0px;
+
+
+             }
+             h3{
+                margin-top: 0px;
+             }
+
+
+
+        </style>
+
+
+
+<script  type="text/javascript">
+$(document).ready(function(){
+
+    $("#formulario").submit(function() {
+
+       if ($('#errorRangoFechas').is(':visible')){
+            $('#errorRangoFechas').hide('slow');
+       }
+       if ($('.errorFecha').is(':visible')){
+            $('.errorFecha').hide('slow');
+       }
+
+
+
+        band = false; band1 = false; band2 = false; band3 = false; band4 = false
+        if ($('#id_fechaDesde').val() === '') {
+            $('#fechaDesde').show('slow');
+
+        }else{
+            $('#fechaDesde').hide();
+            band = true;
+        }
+        if ($('#id_fechaHasta').val() === '') {
+            $('#fechaHasta').show('slow');
+        }else{
+            $('#fechaHasta').hide();
+             band1 = true;
+        }
+
+        if (!$('input:radio[name=formaDePago]:checked').val()) {
+            $('#formaDePago').show('slow');
+        }else {
+            if ($('input:radio[id=id_formaDePago_2]:checked').val()) {
+
+                if (!$('input:checkbox[name=formaDePagoMas]:checked').val()){
+
+                     $('#formaDePago').show('slow');
+                    console.log('no esta ninguna forma de pago');
+
+                }else{
+                    $('#formaDePago').hide();
+                    console.log('esta marcado forma de pago')
+                    band2 = true;
+
+                }
+             }else{
+
+                $('#formaDePago').hide();
+                 band2 = true;
+             }
+        }
+
+        if (!$('input:radio[name=codRemoto]:checked').val()) {
+            $('#codRemoto').show('slow');
+        }else{
+            $('#codRemoto').hide();
+            band3 = true;
+        }
+
+
+
+
+        if (band1 && band) {
+            var fechad = $('#id_fechaDesde').val();
+            var diad = parseInt(fechad.substring(0,2));
+            var mesd = parseInt(fechad.substring(3,5));
+            var aniod = parseInt(fechad.substring(6,10));
+
+            fechah = $('#id_fechaHasta').val();
+            diah = parseInt(fechah.substring(0,2));
+            mesh = parseInt(fechah.substring(3,5));
+            anioh = parseInt(fechah.substring(6,10));
+
+            if ((anioh - aniod) == 0){
+                if ((mesh - mesd) == 0){
+                    if ((diah - diad) < 0) {
+                        $('.errorFecha').show('slow');
+
+                    }else{
+                        band4 = true;
+                    }
+                }else{
+                    if ((mesh-mesd)>1){
+                        $('#errorRangoFechas').show('slow');
+                    }else{
+                        if ((mesh-mesd)<0){
+                          $('.errorFecha').show('slow');
+                        }else{
+                            if ((diah - diad) >= 0){
+                                $('#errorRangoFechas').show('slow');
+
+                            }else{
+
+                                band4 = true;
+                            }
+                        }
+                    }
+                }
+            }else{
+                if ((anioh - aniod) > 1){
+                    $('#errorRangoFechas').show('slow');
+                }else{
+                    if ((anioh - aniod) < 0){
+                        $('.errorFecha').hide('slow');
+                    }else{
+                        if (mesd == 12 && (mesd-mesh) == 11){//caso especial cuando es del diciembre a enero del año siguiente.
+                            if ((diah - diad) >= 0){
+                                $('#errorRangoFechas').show('slow');
+                            }else{
+                                band4 = true;
+                            }
+                        }else{
+                            $('#errorRangoFechas').show('slow');
+                        }
+                    }
+                }
+            }
+        }
+
+        if (band && band1 && band2 &&  band3 && band4){
+            progreso();
+            return true;
+        }else{
+
+            return false;
+        }
+    });
+
+/*
+
+    */
+
+});
+
+ function desplegar(a){
+        if (a == 3){
+            $('#id_formaDePagoMas').show('slow');
+        }else{
+            $('#id_formaDePagoMas').hide('slow');
+        }
+   }
+
+</script>
+
+
+
+
+
+
+
+  <main id="centro">
+      <h3>Datos de Entrada - Reportes seg&uacute;n Forma de Pago</h3>
+
+  <div class="fieldWrapper">
+    {{ form.cc_myself.errors }}
+    <label for="id_fechaHasta"></label>
+    {{ form.cc_myself }}
+</div>
+
+   <form id='formulario'  class="" method='post' action=''> {% csrf_token %}
+        <p style="margin-top:-5px;"><label class="errorlist" id="fechaDesde">Debe ingresar fecha Desde</label> <br>
+           <label for="id_fechaDesde">Ingrese la fecha desde:</label> <input id="id_fechaDesde" name="fechaDesde" type="text" readonly="readonly" />
+        </p>
+
+        <p id="errorRangoFechas">
+             <label style="font-size:12px; margin-left:2%;">El rango de fecha supera el mes. Se debe ingresar como m&aacute;ximo un rango de un (1) MES entre "Fecha Desde" y "Fecha Hasta"</label>
+        </p>
+
+        <p><label class="errorlist" id="fechaHasta">Debe ingresar fecha Hasta</label><br>
+            <label for="id_fechaHasta">Ingrese la fecha hasta:</label> <input id="id_fechaHasta" name="fechaHasta" type="text" readonly="readonly" /> <label class="errorFecha" >Ésta fecha no puede ser menor a "Fecha Desde"</label>
+        </p>
+
+        <p><label class="errorlist" id="formaDePago">Debe ingresar alguna forma de Pago</label><br>
+            <label for="id_formaDePago_0">Ingrese forma de pago:</label> <ul id="id_formaDePago">
+
+        <li><label for="id_formaDePago_0"><input id="id_formaDePago_0" name="formaDePago" type="radio" value="1"  onclick="desplegar(1)"/> Cuenta Corriente</label></li>
+
+        <li><label for="id_formaDePago_1"><input id="id_formaDePago_1" name="formaDePago" type="radio" value="2"  onclick="desplegar(2)"/> Contado</label></li>
+
+        <li><label for="id_formaDePago_2"><input id="id_formaDePago_2" name="formaDePago" type="radio" value="3"  onclick="desplegar(3)" /> Otras formas de pago</label></li>
+
+       </ul> </p>
+
+       <p><ul id="id_formaDePagoMas" style="display:none;">
+        <li><label for="id_formaDePagoMas_0"><input id="id_formaDePagoMas_0" name="formaDePagoMas" type="checkbox" value="6" /> Compensaci&oacute;n</label></li>
+        <li><label for="id_formaDePagoMas_1"><input id="id_formaDePagoMas_1" name="formaDePagoMas" type="checkbox" value="8" /> Reposici&oacute;n</label></li>
+        <li><label for="id_formaDePagoMas_2"><input id="id_formaDePagoMas_2" name="formaDePagoMas" type="checkbox" value="7" /> Cortes&iacute;as</label></li>
+        <li title="Mensual, Migraci&oacute;n, Cuenta Interna, Tarjeta y Compensaci&oacute;n Efectivo"><label for="id_formaDePagoMas_3"><input id="id_formaDePagoMas_3" name="formaDePagoMas" type="checkbox" value="5" /> Otros</label></li>
+        </ul></p>
+
+
+       <!--<p><label for="id_reporte">Seleccione el reporte que desea cargar:</label> <select id="id_reporte" name="reporte">-->
+        <!--<option value="Cuenta Corriente en Bruto">Cuenta Corriente en Bruto</option>-->
+        <!--<option value="Otros">Otros</option>-->
+        <!--</select></p>-->
+
+        <p><label class="errorlist" id="codRemoto">Falta ingresar codigo remoto</label><br>
+            <label for="id_codRemoto_0">Ingrese codigo remoto:</label> <ul id="id_codRemoto">
+        <li><label for="id_codRemoto_0"><input id="id_codRemoto_0" name="codRemoto" type="radio" value="1" /> Chaco</label></li>
+        <li><label for="id_codRemoto_1"><input id="id_codRemoto_1" name="codRemoto" type="radio" value="2" /> Corrientes</label></li>
+        </ul></p>
+
+
+
+
+
+       <center><input type='submit'  value='Consultar' class="btn btn-center"/></center>
+   </form>
+    <div id="barraProgreso">
+      <label id="cargando" style="display:none;" >Cargando... </label>
+
+      <div id="progressbar"></div>
+    </div>
+  </main>
+
+   <div id="navegacion">
+
+        <a href="/menuReportesEstadisticos/">Volver</a>
+
+        <!--<a href="/">Men&uacute; Principal</a>-->
+
+
+
+</div>
+
+
+
+
+
+
+
+<script src="{{STATIC_URL}}js/ours/datepicker.js" type="text/javascript"></script>
+
+
+
+{% endblock %}
+

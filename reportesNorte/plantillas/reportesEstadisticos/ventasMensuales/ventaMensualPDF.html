@@ -1,0 +1,170 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <title>Reportes</title>
+        <style type="text/css">
+            @page {
+                size: a4 landscape;
+                margin: 2cm 0.5cm 2.2cm 0.5cm;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-top: 8px;
+
+                @frame header {
+                    -pdf-frame-content: headerContent;
+                    margin-left: 1cm;
+                    margin-right: 1cm;
+                    margin-bottom:4cm;
+                    height: 2.1cm;
+                }
+                @frame footer {
+                    -pdf-frame-content: footerContent;
+                    bottom: 0.5cm;
+                    margin-left: 1cm;
+                    margin-right: 1cm;
+                    height: 1cm;
+                    padding-top: 10px;
+                }
+            }
+
+            #report_lists {
+                border: 1px solid #ccc;
+                font-size: 16px;
+
+                padding-top: 5px;
+                table-layout: fixed;
+                -pdf-keep-in-frame-mode: none;
+            }
+            #report_head {
+                background-color: #ccc;
+                font-size: 18px;
+                padding: 5px;
+            }
+            #headerComun{
+                padding: 5px;
+                font-size:20px;
+            }
+            table {
+                -pdf-keep-in-frame-mode: none;
+            }
+
+
+        </style>
+    </head>
+    <body>
+
+        <div id="headerContent">
+
+            <table><tr><td align="center"><img src="{{MEDIA_URL}}images/Encabezado_Norte.jpg" height="300"  width="4000"></td>
+
+                   </tr>
+            </table>
+
+        </div>
+
+        <div id="headerComun">
+
+            <table><tr>
+
+                        <td align="center">Resumen Total de Ventas Publicidad - {{provincia}}
+                        desde {{fechaDesde}} hasta {{fechaHasta}}</td>
+
+
+                   </tr>
+            </table>
+
+
+        </div>
+        <table id="report_lists">
+            <thead id="report_head">
+                <tr>
+
+
+                        <th align="vmiddle" style="background-color: #ccc; padding: 3px">Grupo</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Total Centimetros</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Neto sin Iva</th>
+
+                </tr>
+            </thead>
+
+                        {% for obj in object_lists %}
+                        <tr>
+                            {% if obj.Grupo == 0 %}
+                                   <td align="center">Registro indefinido y/o sin Grupo</td>
+                            {% endif %}
+                            {% if obj.Grupo == 3 %}
+                                   <td align="center">Interior</td>
+                            {% endif %}
+                            {% if obj.Grupo == 99 %}
+                                   <td align="center">Contado</td>
+                            {% endif %}
+                            {% if obj.Grupo == 8000 %}
+                                   <td align="center">Total</td>
+                            {% endif %}
+                            {% if obj.Grupo == 4 %}
+                                   <td align="center">Capital</td>
+                            {% endif %}
+                             {% if obj.Grupo == 5 %}
+                                   <td align="center">Ventura</td>
+                            {% endif %}
+                            {% if obj.Grupo == 6 %}
+                                   <td align="center">Oficiales</td>
+                            {% endif %}
+                            {% if obj.Grupo == 7 %}
+                                   <td align="center">Canjes</td>
+                            {% endif %}
+                            {% if obj.Grupo == 9 or obj.Grupo == 10 %}
+                                   <td align="center">Directas</td>
+                            {% endif %}
+
+
+
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.TotalCms == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.TotalCms != 0 %}
+                                    {{ obj.TotalCms|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.NetoSinIva == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.NetoSinIva != 0 %}
+                                    {{ obj.NetoSinIva|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                       </tr>
+
+                       {% endfor %}
+
+              <!--<div style=" page-break-after: always;"></div>-->
+
+
+        </table>
+
+        <div id="footerContent">
+
+            <table>
+                    <tr>
+                       <td>Usuario:{{ nombreUsuario }} </td>
+                       <td>Emitido: {% now "d M Y - h:m:s" %}</td>
+                       <td align="center">Sistema de Reporte de Pasantes</td>
+                       <td align="center"> Página: <pdf:pagenumber> / <pdf:pagecount> </td>
+
+                    </tr>
+            </table>
+
+        </div>
+    </body>
+    </html>

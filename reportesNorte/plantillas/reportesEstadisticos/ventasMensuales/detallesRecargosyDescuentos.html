@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+
+
+{% block exportacion %}
+
+   <div id="exportacion">
+
+
+       <a href="javascript:void(0)" title="Ver/Ocultar Gr&aacute;fico de Recargos" onclick="mostrarGrafico()"><img src="{{STATIC_URL}}images/charRecargos.png"></a>
+       <a href="javascript:void(0)" title="Ver/Ocultar Gr&aacute;fico de Descuentos" onclick="mostrarGraficoDesc()"><img src="{{STATIC_URL}}images/chart.png"></a>
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+
+    <style type="text/css">
+            .container{
+                margin-left:10px;
+                margin-top: 0px;
+            }
+
+            #exportacion {
+
+                 margin-left: 76%;
+
+            }
+            #navegacion {
+
+                margin-top: 90px;
+            }
+
+            #centroGrid{ min-height:200px; }
+
+            .ui-jqgrid .ui-jqgrid-view {  font-size: 13px;}
+
+            .clasepropia {
+                font-weight: bold !important;
+            }
+
+            .ui-widget-content .rowClass {
+                color: blue;  background-image: none; }
+
+            .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:19px;}
+
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 18px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 28px;
+            }
+            .ui-jqgrid .ui-jqgrid-titlebar {
+                font-size: 18px;
+                padding: 0.1em 0.1em 0.1em 2em;
+            }
+
+        </style>
+
+        <!--{% for elemento in listaParaGrafico  %}-->
+
+                <!--<input type="text" id={{elemento.nombre}} style="display:none;" value={{elemento.valor}} />-->
+        <!--{% endfor %}-->
+
+<h4>{{tit}} de {{codigoRemoto}} desde {{fechaDesde}} hasta {{fechaHasta}} </h4>
+
+<main id="centroGrid">
+<div align="center">
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+</div>
+</main>
+
+    <!--<table id="gridpager" class="scroll" style="text-align: center;"> </table>-->
+    <!--<div id="gridpager"></div>-->
+<script type="text/javascript">
+ //$(document).ready(function(){
+
+    jQuery("#list").jqGrid({
+    url:'/json_graficosTotales',
+    datatype: 'json',
+    mtype: 'GET',
+
+
+    colNames:['Concepto','Valor Neto en Pesos'],
+
+    colModel :[
+      {name:'nombre',index:'nombre', width:200, editable:true, classes: 'clasepropia'},
+      {name:'valor',index:'valor',width:200,align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum'}
+
+    ],
+
+    rowNum:-1,
+    //rownumbers: true,
+    viewrecords: true,
+    emptyrecords : "No hay registros para mostrar",
+    height: 'auto',
+    sortorder: 'desc',
+    viewrecords: true,
+
+    //pager: $('#gridpager'),
+    footerrow: true,
+    userDataOnFooter: true,
+    //loadOnce: true,
+    caption: 'Recargos y Descuentos en Anuncios'
+    //emptyDataText:'No hay registros'
+
+
+  });
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+//});
+
+function mostrarGrafico(){
+
+    if ($('#grafico').is(':visible')){
+        $('#grafico').hide('slow');
+    }else{
+    //display: inline-block;
+
+        $('#grafico').css('display', 'inline-block')
+        //$('#grafico').show('slow');
+
+    }
+}
+
+function mostrarGraficoDesc(){
+    if ($('#graficoDesc').is(':visible')){
+        $('#graficoDesc').hide('slow');
+    }else{
+
+        $('#graficoDesc').css('display', 'inline-block')
+        //$('#graficoDesc').show('slow');
+
+    }
+}
+
+$(function () {
+
+    var listaParaGrafico = {{listaParaGrafico |safe }};
+
+    var listaHighChartRecargo = [];
+
+    for (i=0 ; i < listaParaGrafico.length; i++){
+        if (listaParaGrafico[i].valor != 0){
+            listaHighChartRecargo.push([listaParaGrafico[i].nombre.toString()+' '+parseFloat(listaParaGrafico[i].valor).toFixed(1)+'%', parseFloat(listaParaGrafico[i].valor)]);
+        }
+    }
+
+    var listaParaGrafico2 = {{listaParaGrafico2 |safe }};
+
+    var listaHighChartDescuento = [];
+
+    for (i=0 ; i < listaParaGrafico2.length; i++){
+        if (listaParaGrafico2[i].valor != 0){
+            listaHighChartDescuento.push([listaParaGrafico2[i].nombre.toString()+' '+parseFloat(listaParaGrafico2[i].valor).toFixed(1)+'%', parseFloat(listaParaGrafico2[i].valor)]);
+        }
+    }
+
+var is_chrome = /chrome/i.test( navigator.userAgent );
+    if (is_chrome) {
+        bandera = false;
+    }else{
+        bandera = true;
+    }
+
+var highchartsOptions = Highcharts.setOptions({
+      lang: {
+            loading: 'Aguarde...',
+            exportButtonTitle: "Exportar",
+            printButtonTitle: "Imprimir",
+            rangeSelectorFrom: "De",
+            rangeSelectorTo: "Hasta",
+            rangeSelectorZoom: "Periodo",
+            printChart: 'Imprimir Grafico',
+            downloadPNG: 'Descargar imagen en PNG',
+            downloadJPEG: 'Descargar imagen en JPEG',
+            downloadPDF: 'Descargar imagen en PDF',
+            downloadSVG: 'Descargar imagen en SVG'
+
+            }
+      }
+  );
+    $('#graficoDesc').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: 'Representacion Grafica de Descuentos'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: listaHighChartDescuento
+        }],
+
+        exporting: {
+            enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+    //Esta es la parte de Recargos
+     $('#grafico').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: 'Representacion Grafica de Recargos'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: listaHighChartRecargo
+        }],
+
+        exporting: {
+            enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+
+});
+
+
+
+</script>
+
+
+
+
+
+
+{% block grafico %}
+
+
+<script src="{{STATIC_URL}}js/highcharts.js"></script>
+<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
+<script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+  <center>
+
+   <div id="grafico" style="display:none;margin-top: 30px;margin-rigth: 10px;width:42%;"></div>
+   <div id="graficoDesc" style="display:none;margin-top: 30px;margin-left: 10px;width:45%;"></div>
+
+</center>
+{% endblock %}
+
+
+
+
+
+
+
+{% block navegacion %}
+    <div id="navegacion">
+
+        <a href="/ventasMensuales/">Volver</a>
+
+        <!--<a href="/ventasMensuales/">Reportes de Ventas Mensuales</a>-->
+
+        <!--<a href="/menuReportesEstadisticos/">Reportes Estad&iacute;sticos</a>-->
+
+        <!--<a href="/">Men&uacute; Principal</a>-->
+
+
+
+    </div>
+
+
+  {% endblock %}
+
+<div class="shadow"></div>
+
+  <div class="enviarCorreo">
+		<h3>Enviar PDF por Correo</h3>
+        <form method="post" id="formEmail">
+            {% csrf_token %}
+            <TABLE BORDER="0">
+
+                <TR>
+                   <TD><label>Asunto: </label></TD>
+                   <TD><input type="text" id="asunto" name="asunto"/></TD>
+                   <TD><label id="eAsunto" class="errorFecha">Debe completar Asunto </label></TD>
+                </TR>
+                <TR>
+                   <TD><label>Destinatario: </label></TD>
+                   <TD><input type="text" id="destinatario" name="destinatario"/></TD>
+                   <TD><label id="eDestinatario" class="errorFecha">Debe completar correo destinatario </label></TD>
+                   <TD><label id="mailFalse" class="errorFecha">El correo no es valido </label></TD>
+                </TR>
+                <TR>
+                   <TD><label>Texto del Correo: </label></TD>
+                   <TD><textarea type="text" id="mailText" name="mailText"></textarea></TD>
+
+                </TR>
+            </TABLE>
+
+            <center><input id="button" type="submit" class="btn btn-center" value="Enviar"></center>
+        </form>
+	</div>
+
+
+
+ {% endblock %}
+

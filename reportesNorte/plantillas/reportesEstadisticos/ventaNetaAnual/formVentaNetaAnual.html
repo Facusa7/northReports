@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Ingreso de parametros
+{% endblock %}
+
+{% block exportacion %}
+
+{% endblock %}
+
+{%block contenido %}
+<script  type="text/javascript">
+$(document).ready(function(){
+
+    $("#formulario").submit(function() {
+
+        band3 = false;
+
+
+        if (!$('input:radio[name=codRemoto]:checked').val()) {
+            $('#codRemoto').show('slow');
+        }else{
+            $('#codRemoto').hide();
+            band3 = true;
+        }
+
+
+        if (band3){
+            progreso();
+            return true;
+        }else{
+
+            return false;
+        }
+    });
+
+});
+
+
+</script>
+  <main id="centro">
+      <h3>Seleccione Diario</h3>
+
+
+
+   <form id='formulario' class="" method='post' action=''> {% csrf_token %}
+
+
+       <p><label class="errorlist" id="codRemoto">Falta ingresar codigo remoto</label><br>
+           <label for="id_codRemoto_0">Ingrese codigo remoto:</label> <ul id="id_codRemoto">
+        <li><label for="id_codRemoto_0"><input id="id_codRemoto_0" name="codRemoto" type="radio" value="1" /> Chaco</label></li>
+        <li><label for="id_codRemoto_1"><input id="id_codRemoto_1" name="codRemoto" type="radio" value="2" /> Corrientes</label></li>
+        </ul></p>
+
+       <center>
+         <input type='submit' value='Consultar' id="" class="btn btn-center"/>
+       </center>
+
+   </form>
+
+      <div id="barraProgreso">
+          <label id="cargando" style="display:none;" >Cargando... </label>
+
+          <div id="progressbar"></div>
+      </div>
+
+
+  </main>
+{% block navegacion %}
+    <div id="navegacion">
+
+
+        <a href="/menuReportesEstadisticos/">Volver </a>
+
+        <!--<a href="/">Men&uacute; Principal</a>-->
+
+
+
+    </div>
+  {% endblock %}
+
+
+{% endblock %}
+

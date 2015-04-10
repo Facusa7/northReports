@@ -1,0 +1,355 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <title>Reportes</title>
+        <style type="text/css">
+            @page {
+                size: a4 landscape;
+                margin: 2cm 0.5cm 2.2cm 0.5cm;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-top: 8px;
+
+                @frame header {
+                    -pdf-frame-content: headerContent;
+                    margin-left: 1cm;
+                    margin-right: 1cm;
+                    margin-bottom:4cm;
+                    height: 2.1cm;
+                }
+                @frame footer {
+                    -pdf-frame-content: footerContent;
+                    bottom: 0.5cm;
+                    margin-left: 1cm;
+                    margin-right: 1cm;
+                    height: 1cm;
+                    padding-top: 10px;
+                }
+            }
+
+            #report_lists {
+                border: 1px solid #ccc;
+                font-size: 7px;
+                padding-top: 5px;
+                table-layout: fixed;
+                -pdf-keep-in-frame-mode: none;
+            }
+            #report_head {
+                background-color: #ccc;
+                font-size: 8px;
+                padding: 5px;
+            }
+            #headerComun{
+                padding: 5px;
+            }
+            table {
+                -pdf-keep-in-frame-mode: none;
+            }
+
+
+        </style>
+    </head>
+    <body>
+
+        <div id="headerContent">
+
+            <table><tr><td align="center"><img src="{{MEDIA_URL}}images/Encabezado_Norte.jpg" height="300"  width="4000"></td>
+
+                   </tr>
+            </table>
+
+
+        </div>
+<br/>
+        <div id="headerComun">
+
+            <table><tr>
+                {% if agrupacion == 'Grupo' and titulo == 'Cuenta Corriente A' %}
+                        <td style="font-weight: bold;" align="center">Avisos de Cuenta Corriente en {{provincia}}
+                        desde {{fechaDesde}} hasta {{fechaHasta}}</td>
+                      {% endif %}
+
+                     {% if agrupacion == 'Aviso' %}
+                         {% if titulo != 'Contado' %} <!--Aca se selecciono cortesias, composicion, etc-->
+                            <td style="font-weight: bold;" align="center">Avisos de {{ titulo }} en {{provincia}}
+                            desde {{fechaDesde}} hasta {{fechaHasta}} </td>
+                         {% endif %}
+                         {% if titulo == 'Contado' %} <!--Aca simplemente contado A-->
+                            <td style="font-weight: bold;" align="center">Avisos de Contado en {{provincia}}
+                            desde {{fechaDesde}} hasta {{fechaHasta}}</td>
+                         {% endif %}
+
+                      {% endif %}
+
+                      {% if agrupacion == 'Cliente' %} <!--En este caso esta agrupado por Directas, ventura,etc-->
+                           <td style="font-weight: bold;" align="center">Avisos de {{ titulo }} en {{provincia}}
+                           desde {{fechaDesde}} hasta {{fechaHasta}}</td>
+                      {% endif %}
+
+
+                   </tr>
+            </table>
+
+
+        </div>
+
+
+        <table id="report_lists">
+            <thead id="report_head">
+                <tr>
+                   {% if agrupacion == 'Grupo' %}
+
+                        <th align="vmiddle" style="background-color: #ccc; padding: 3px">Grupo</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Codigo</th>
+                   {% endif %}
+
+                    <th align="vmiddle" style="background-color: #ccc;">Aviso</th>
+                     {% if agrupacion == 'Aviso' and titulo != 'Contado' %}
+                      <th align="vmiddle" style="background-color: #ccc;">Codigo</th>
+                     {% endif %}
+                    <th align="vmiddle" style="background-color: #ccc;">A Cliente</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Total Centimetros</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Desc. CMS</th>
+                    <th align="vmiddle" style="background-color: #ccc;">CMS Neto</th>
+                    <th align="vmiddle" style="background-color: #ccc;">V. Anuncio</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Rec. Color</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Rec. Logo</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Desc. Manual</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Total Recargo</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Total Bruto</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Desc. Promocion</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Desc. Convenio</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Com. Agencia</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Desc. Agencia</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Total Descuento</th>
+                    <th align="vmiddle" style="background-color: #ccc;">Neto sin Iva</th>
+                    <!--<th align="vmiddle" style="background-color: #ccc;">Cond. IVA</th>-->
+                </tr>
+            </thead>
+
+                        {% for obj in object_lists %}
+                        <tr>
+                           {% if agrupacion == 'Grupo' %}
+                            <td align="center">{{ obj.Grupo }}</td>
+                            <td align="center">{{ obj.Codigo }}</td>
+                          {% endif %}
+                            <td align="center">{{ obj.Aviso|truncatechars:15}}</td>
+                          {% if agrupacion == 'Aviso' and titulo != 'Contado'  %}
+                              <td align="center">{{ obj.Codigo }}</td>
+                          {% endif %}
+                            <td align="center">{{ obj.AgenciaCliente|truncatechars:14  }}</td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.TotalCms == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.TotalCms != 0 %}
+                                    {{ obj.TotalCms|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.DescCms == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.DescCms != 0 %}
+                                    {{ obj.DescCms|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.CmsNeto == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.CmsNeto != 0 %}
+                                    {{ obj.CmsNeto|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.ValorAnuncio == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.ValorAnuncio != 0 %}
+                                    {{ obj.ValorAnuncio|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.RecargoColor == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.RecargoColor != 0 %}
+                                    {{ obj.RecargoColor|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                           <td style= "padding 2px" align="right">
+
+                                {% if obj.RecargoLogo == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.RecargoLogo != 0 %}
+                                    {{ obj.RecargoLogo|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.DescManual == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.DescManual != 0 %}
+                                    {{ obj.DescManual|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.TotalRecargo == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.TotalRecargo != 0 %}
+                                    {{ obj.TotalRecargo|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.TotalBruto == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.TotalBruto != 0 %}
+                                    {{ obj.TotalBruto|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.DescPromocion == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.DescPromocion != 0 %}
+                                    {{ obj.DescPromocion|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+                            
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.DescConvenio == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.DescConvenio != 0 %}
+                                    {{ obj.DescConvenio|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.ComAgencia == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.ComAgencia != 0 %}
+                                    {{ obj.ComAgencia|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.DescAgencia == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.DescAgencia != 0 %}
+                                    {{ obj.DescAgencia|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                             <td style= "padding 2px" align="right">
+
+                                {% if obj.TotalDescuento == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.TotalDescuento != 0 %}
+                                    {{ obj.TotalDescuento|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+
+                            
+                            <td style= "padding 2px" align="right">
+
+                                {% if obj.NetoSinIva == 0 %}
+                                    --
+                                {% endif %}
+
+                                {% if obj.NetoSinIva != 0 %}
+                                    {{ obj.NetoSinIva|floatformat:2 }}
+                                {% endif %}
+
+                            </td>
+                            
+                            <!--<td style= "padding 2px" align="right">-->
+
+                                <!--{% if obj.CondIva == 0 %}-->
+                                    <!------>
+                                <!--{% endif %}-->
+
+                                <!--{% if obj.CondIva != 0 %}-->
+                                    <!--{{ obj.CondIva|floatformat:2 }}-->
+                                <!--{% endif %}-->
+
+                            <!--</td>-->
+
+                       </tr>
+
+                       {% endfor %}
+
+              <!--<div style=" page-break-after: always;"></div>-->
+
+
+        </table>
+
+        <div id="footerContent">
+
+            <table>
+                    <tr>
+                       <td>Usuario:{{ nombreUsuario }} </td>
+                       <td>Emitido: {% now "d M Y - h:m:s" %}</td>
+                       <td align="center">Sistema de Reporte de Pasantes</td>
+                       <td align="center"> Página: <pdf:pagenumber> / <pdf:pagecount> </td>
+
+                    </tr>
+            </table>
+
+        </div>
+    </body>
+    </html>

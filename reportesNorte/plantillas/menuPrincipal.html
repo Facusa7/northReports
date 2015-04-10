@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Ingreso de parametros
+{% endblock %}
+
+{% block exportacion %}
+
+
+ {% endblock %}
+{%block contenido %}
+
+  <main id="centro">
+      <h2>Men&uacute; Principal</h2>
+
+<div id="cuadrilla">
+    <ul class="nav nav-justified">
+        <li><a href="/menuReportesEstadisticos/" style="padding:10px 26px" id="reportesEstadisticos" onmouseover="muestra(id)" onmouseout="fuera(id)">Reportes Estad&iacute;sticos</a></li>
+
+
+        <li><a  href="promociones/formPromociones" style="padding:10px 0px" id="reportesPromociones" onmouseover="muestra(id)" onmouseout="fuera(id)">Reportes de Promociones/Convenios</a></li>
+    </ul>
+
+
+    <ul class="nav nav-justified">
+        <li><a href="ventasDiayHora/formVentasCaptura" id="ventasDiaHora" onmouseover="muestra(id)" onmouseout="fuera(id)">Ventas por Día y Hora</a></li>
+
+
+        <li><a href="javascript:void(0)" id="consumosPanel" onmouseover="muestra(id)" onmouseout="fuera(id)">Consumos de Papel</a></li>
+    </ul>
+
+    <ul class="nav nav-justified">
+        <li><a href="/reportesVendedor/formVentasVendedor" id="vendedorPorHora" onmouseover="muestra(id)" onmouseout="fuera(id)">Captura de Avisos por Vendedores</a></li>
+    </ul>
+
+    <ul class="nav nav-justified">
+        <li><a href="/reportesFacturas/facturasPublicadas/formAvisosPublicadosFacturados" id="facturacion" onmouseover="muestra(id)" onmouseout="fuera(id)">Reportes de Facturaci&oacute;n</a></li>
+
+        <li><a href="/reportesFacturas/facturasTotales/formFacturasMensuales/" id="facturacionTotal" onmouseover="muestra(id)" onmouseout="fuera(id)">Facturas de Publicidad y de NO Publicidad</a></li>
+
+
+    </ul>
+
+</div>
+
+<div class="mensajeReporte">
+
+    <!--<p id="LreportesEstadisticos">-->
+      <!--En este reporte obtendr&aacute; de forma detallada las ventas producidas de un día o m&aacute;ximo un mes cualquiera.-->
+        <!--Tambi&eacute;n se puede tener un informe detallado por cualquier forma de pago, y codigos rem&oacute;to (Chaco y Corrientes).-->
+    <!--</p>-->
+    <!--<p id="Lindicador2">-->
+        <!--Inidcador 2 "Proximamente".-->
+    <!--</p>-->
+
+</div>
+
+</main>
+<script type="text/javascript">
+
+    function muestra(e){
+        if (e == 'reportesEstadisticos'){
+            $('.mensajeReporte').html("<p>Resumenes de ventas de avisos mensuales, anuales y discrimanado seg&uacute;n formas de pago.</p>");
+
+        }
+        if (e == 'reportesPromociones'){
+            $('.mensajeReporte').html('<p>Resumen de ventas de avisos discriminado por Promociones y Convenios.<br/> Por el momento solo puede consultar desde enero del 2010 hasta noviembre 2014.</p>');
+
+        }
+        if (e == 'ventasDiaHora'){
+            $('.mensajeReporte').html('<p>Resumen de ventas de avisos por Día y por Hora con sus respectivos gr&aacute;ficos de l&iacute;nea.<br/> Por el momento solo puede consultar desde enero del 2010 hasta noviembre 2014.</p>');
+
+        }
+        if (e == 'consumosPanel'){
+            $('.mensajeReporte').html('<p>Consumos de Papel en Construcci&oacute;n.</p>');
+
+        }
+   }
+
+    function fuera(e){
+        if (e == 'reportesEstadisticos'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'reportesPromociones'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'ventasDiaHora'){
+            $('.mensajeReporte').html('');
+
+        }
+        if (e == 'consumosPanel'){
+            $('.mensajeReporte').html('');
+
+        }
+    }
+</script>
+
+
+{% endblock %}
+

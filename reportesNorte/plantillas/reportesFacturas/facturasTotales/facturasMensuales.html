@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+
+
+{% block exportacion %}
+
+   <div id="exportacion">
+
+
+       <a href="javascript:void(0)" title="Imprimir Reporte" onclick="printPage()"><img src="{{STATIC_URL}}images/Print-icon.png"></a>
+
+      <!--<a href="/exportarAPdf" title="Ver Reporte en PDF" target="_blank"><img src="{{STATIC_URL}}images/pdf-ico.png"></a>-->
+
+       <a href="/exportarAXls" title="Descargar Reporte en Excel" target="_blank" ><img src="{{STATIC_URL}}images/microsoft-excel.png"></a>
+
+
+       <a href="javascript:void(0)" title="Ver Gr&aacute;fico con las distintas promociones" onclick="mostrarGrafico()"><img src="{{STATIC_URL}}images/chart.png"></a>
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+
+    <style type="text/css">
+            .container{
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 15px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 20px;
+            }
+
+            .ui-widget-content .rowClass { color: blue; font-size:16px; !important; }
+    </style>
+
+
+
+<h3>{{tit}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+
+<input type="text" id="tit" style="display:none" value={{titulo}} />
+
+<main id="centroGrid">
+<div id='promocionSinResumir' align="center">
+
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+</div>
+
+<!--<div id='cuentaCorrienteAgrupadoPor' style="display:none;" align="center">-->
+
+    <!--<table id="listXAviso" class="gridTotales"></table>-->
+<!--</div>-->
+    <!--<div id="result" align="center"></div>-->
+
+
+</main>
+<script type="text/javascript">
+    var dataFacturacion = {{ listaFacturacion | safe }}
+    $("#list").jqGrid({
+        datatype: 'local',
+        mtype: 'GET',
+        colNames:
+
+        ['Fuente Ingreso',
+        'Importe sin Impuestos'
+        ],
+
+         colModel :[
+          {name:'FuenteIngreso',index:'FuenteIngreso',sortable:false, width:250},
+
+          {name:'ImportesinImpuestos',index:'ImporteSinImpuestos',align:"right", sortable:false,
+                 formatter: currencyFmatter2,summaryType:'sum', width:250}
+        ],
+        rowNum:-1,
+        height: 'auto',
+        //pager: $('#gridpager'),
+
+        sortorder: 'desc',
+        viewrecords: true,
+        footerrow: true,
+        userDataOnFooter: true,
+        caption: 'Facturado',
+        rowattr: function (rd) {
+             if (rd.FuenteIngreso == 'Total') {
+                 return {"class": "rowClass"};
+             }
+        }
+
+    });
+
+    var mydata = [];
+    obj = dataFacturacion;
+    var names = ["FuenteIngreso", "ImportesinImpuestos"];
+    for (var i = 0; i < obj.length; i++) {
+      mydata[i] = {};
+
+      mydata[i][names[0]] = obj[i]['FuenteIngreso'];
+      mydata[i][names[1]] = obj[i]['ImportesinImpuestos'];
+
+    }
+    //console.log(mydata);
+    for (var i = 0; i <= mydata.length; i++) {
+      $("#list").jqGrid('addRowData', i + 1, mydata[i]);
+    }
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+
+function mostrarGrafico(){
+
+    if ($('#graficoFacturacion').is(':visible')){
+        $('#graficoFacturacion').hide('slow');
+    }else{
+        $('#graficoFacturacion').show('slow');
+    }
+
+
+}
+
+
+$(function () {
+var listaGrafico = {{listaGrafico | safe}};
+
+    var data = [];
+    for (i=0 ; i < listaGrafico.length; i++){
+        if (listaGrafico[i].porc != 0){
+            data.push([listaGrafico[i].nombre.toString()+' '+parseFloat(listaGrafico[i].porcentaje).toFixed(1)+'%',
+            parseFloat(listaGrafico[i].porcentaje)]);
+        }
+    }
+
+   var highchartsOptions = Highcharts.setOptions({
+      lang: {
+            loading: 'Aguarde...',
+            exportButtonTitle: "Exportar",
+            printButtonTitle: "Imprimir",
+            rangeSelectorFrom: "De",
+            rangeSelectorTo: "Hasta",
+            rangeSelectorZoom: "Periodo",
+            printChart: 'Imprimir Grafico',
+            downloadPNG: 'Descargar imagen en PNG',
+            downloadJPEG: 'Descargar imagen en JPEG',
+            downloadPDF: 'Descargar imagen en PDF',
+            downloadSVG: 'Descargar imagen en SVG'
+
+            }
+      }
+  );
+  var is_chrome = /chrome/i.test( navigator.userAgent );
+    if (is_chrome) {
+        bandera = false;
+    }else{
+        bandera = true;
+    }
+
+$('#graficoFacturacion').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: 'Conceptos de factura'
+        },
+        subtitle: {
+                text: 'Importes sin IVA'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: data
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+});
+
+</script>
+
+
+{% block grafico %}
+
+
+<script src="{{STATIC_URL}}js/highcharts.js"></script>
+<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
+<script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+  <center>
+
+   <div align="center" style="margin-top:3%; width:70%;background-color: #fff;" id="graficoFacturacion"></div>
+</center>
+{% endblock %}
+
+
+    {% block navegacion %}
+        <div id="navegacion">
+
+                <a id ='btnVariable' href="/listaPromociones/">Volver</a>
+
+
+
+        </div>
+
+    {% endblock %}
+
+
+{% endblock %}
+

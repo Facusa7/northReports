@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+
+{% block exportacion %}
+
+
+   <div id="exportacion">
+        <a href="javascript:void(0)" title="Ver/Ocultar Gr&aacute;fico" onclick="mostrarGrafico()"><img src="{{STATIC_URL}}images/39-512.png"></a>
+
+       <a href="javascript:void(0)" title="Imprimir Reporte" onclick="printPage()"><img src="{{STATIC_URL}}images/Print-icon.png"></a>
+
+      <!--<a href="/exportarAPdf" title="Ver Reporte en PDF" target="_blank"><img src="{{STATIC_URL}}images/pdf-ico.png"></a>-->
+
+       <a href="/exportarAXls" title="Descargar Reporte en Excel" target="_blank" ><img src="{{STATIC_URL}}images/microsoft-excel.png"></a>
+
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+        <!--<a href="javascript:window.print()" class="boton">Click para sacar reporte</a>-->
+
+
+
+    <style type="text/css">
+            .container{
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 13px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 20px;
+            }
+
+             .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:13px; !important;}
+
+            #grupoAgrupadoPor .ui-jqgrid-view  {
+               font-size: 16px !important;
+            }
+            #grupoAgrupadoPor .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 22px;
+            }
+        </style>
+
+
+<h3>Resumen de {{tit}}  de {{codRemoto}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+
+<main id="centroGrid">
+<div id='grupoSinResumir' align="center">
+    <table id="listXVendedor" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+
+
+</div>
+
+</main>
+<script type="text/javascript">
+var dataEfectivo = {{ listaEfectivo | safe }}
+var dataCuentaCorriente = {{ listaCuentaCorriente | safe }}
+var dataCompensacion = {{ listaCompensacion | safe }}
+
+var dataCortesias = {{ listaCortesias | safe }}
+
+var dataReposicion = {{ listaReposicion | safe }}
+
+var datatot = dataEfectivo.concat(dataCuentaCorriente, dataCompensacion, dataCortesias, dataReposicion);
+
+//console.log(datatot);
+
+
+titulo = '{{tit}}';
+
+  $("#listXVendedor").jqGrid({
+
+      datatype: 'local',
+      mtype: 'GET',
+      colNames:
+      ['Nombre Vendedor', 'Cms Neto','Neto Sin Iva','%CmsNeto', '% Neto Sin Iva', 'Forma de Pago'
+       ],
+      colModel :[
+        {name:'nombreVendedor',index:'nombreVendedor', width:242,formatter: currencyFmatter},
+        {name:'CmsNeto',index:'CmsNeto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+        {name:'NetoSinIva',index:'NetoSinIva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+        {name:'PorcentajeCmsNeto',index:'PorcentajeCmsNeto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:120},
+        {name:'PorcentajeNetoSinIva',index:'PorcentajeNetoSinIva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:120},
+        {name:'FormaDePago',index:'FormaDePago', width:100}
+      ],
+      rowNum:-1,
+      height: 'auto',
+      sortorder: 'desc',
+      viewrecords: true,
+
+
+       footerrow: true,
+       userDataOnFooter: true,
+      caption: titulo,
+      rowattr: function (rd) {
+
+         if (rd.nombreVendedor.indexOf("Total") > -1) { // El "-1" te devuelve si no encuentra el substring buscado, sino devuelve la posición donde se encuentra
+
+          return {"class": "rowClass"};
+      }
+     }
+  });
+
+           var mydata = [];
+           obj = datatot;
+           var names = ["nombreVendedor", "CmsNeto", "NetoSinIva", "PorcentajeCmsNeto", "PorcentajeNetoSinIva", "FormaDePago"];
+
+            for (var i = 0; i < obj.length; i++) {
+              mydata[i] = {};
+              mydata[i][names[0]] = obj[i]['nombreVendedor'];
+              mydata[i][names[1]] = obj[i]['CmsNeto'];
+              mydata[i][names[2]] = obj[i]['NetoSinIva'];
+              mydata[i][names[3]] = obj[i]['PorcentajeCmsNeto'];
+              mydata[i][names[4]] = obj[i]['PorcentajeNetoSinIva'];
+              mydata[i][names[5]] = obj[i]['FormaDePago'];
+
+            }
+
+            for (var i = 0; i <= mydata.length; i++) {
+              $("#listXVendedor").jqGrid('addRowData', i + 1, mydata[i]);
+            }
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+function currencyFmatter (cellvalue, options, rowObject)
+{
+
+   var n = parseInt(cellvalue);
+   if (n<23){
+        return n+' (de '+n+' a '+(n+1)+')';
+   }else{
+    return cellvalue;
+   }
+
+
+}
+
+//Grafico de Pila
+
+$(function () {
+var is_chrome = /chrome/i.test( navigator.userAgent );
+    if (is_chrome) {
+        bandera = false;
+    }else{
+        bandera = true;
+    }
+var valoresParaSeries = [];
+var vendedorActual;
+var dataauxiliar = [];
+var dataSeriesContado = [];
+
+for (var i = 0; i < datatot.length; i++) {
+    if (datatot[i]['nombreVendedor'] != "" && datatot[i]['nombreVendedor'].indexOf("Total") == -1) {
+        vendedorActual = datatot[i]['nombreVendedor'];
+
+        band1 = true;
+        for (var p=0; p < dataEfectivo.length; p++) {
+            if (vendedorActual == dataEfectivo[p]['nombreVendedor']){
+                dataauxiliar.push(dataEfectivo[p]['CmsNeto']);
+                band1 = false;
+            }
+        }
+        if (band1 == true) { // Lo de la bandera se hace porque cada vendedor actual debe tener necesariamente 5 lugares en la lista
+            dataauxiliar.push(0);
+        }
+
+        //Lo siguiente se hace para que no inserte varias veces vendedores repetidos en la lista
+        band = true;
+        longitud = dataauxiliar.length;
+        for (var n=0; n < dataSeriesContado.length; n++) {
+            if (vendedorActual == dataSeriesContado[n]['name'] && longitud == dataSeriesContado[n]['data'].length ){
+                band = false;
+            }
+        }
+
+        if (band == true && dataauxiliar !=0) {
+            dataSeriesContado.push({'type': 'column', 'name':vendedorActual, 'data': dataauxiliar});
+        }
+
+        dataauxiliar = [];
+
+    }
+
+
+
+}
+
+    $('#containerGraficoContado').highcharts({
+        title: {
+            text: 'Ventas de Centímetros por Vendedor y Forma de Pago'
+        },
+        xAxis: {
+            categories: ['Contado']
+        },
+        exporting: {
+                enabled: bandera
+            },
+        credits: {
+               enabled: false
+            },
+        yAxis: {
+                title: {
+                    text: 'Centímetros '
+                },
+                labels: {
+                    format: '{value:,.0f}'
+                }
+            },
+        series:dataSeriesContado
+    });
+
+
+
+var valoresParaSeries = [];
+var vendedorActual;
+var dataauxiliar = [];
+var dataSeriesCuentaCorriente = [];
+
+for (var i = 0; i < datatot.length; i++) {
+    if (datatot[i]['nombreVendedor'] != "" && datatot[i]['nombreVendedor'].indexOf("Total") == -1) {
+        vendedorActual = datatot[i]['nombreVendedor'];
+
+        band2 = true;
+        for (var j=0; j < dataCuentaCorriente.length; j++) {
+            if (vendedorActual == dataCuentaCorriente[j]['nombreVendedor']){
+                dataauxiliar.push(dataCuentaCorriente[j]['CmsNeto']);
+                band2 = false;
+            }
+        }
+        if (band2 == true) {
+            dataauxiliar.push(0);
+        }
+
+        //Lo siguiente se hace para que no inserte varias veces vendedores repetidos en la lista
+        band = true;
+        longitud = dataauxiliar.length;
+        for (var n=0; n < dataSeriesCuentaCorriente.length; n++) {
+            if (vendedorActual == dataSeriesCuentaCorriente[n]['name'] && longitud == dataSeriesCuentaCorriente[n]['data'].length ){
+                band = false;
+            }
+        }
+
+        if (band == true && dataauxiliar !=0) {
+            dataSeriesCuentaCorriente.push({'type': 'column', 'name':vendedorActual, 'data': dataauxiliar});
+        }
+
+        dataauxiliar = [];
+
+    }
+
+
+
+}
+
+    $('#containerGraficoCuentaCorriente').highcharts({
+        title: {
+            text: 'Ventas de Centímetros por Vendedor y Forma de Pago'
+        },
+        xAxis: {
+            categories: ['CuentaCorriente']
+        },
+        exporting: {
+                enabled: bandera
+            },
+         credits: {
+               enabled: false
+            },
+        yAxis: {
+                title: {
+                    text: 'Centímetros '
+                },
+                labels: {
+                    format: '{value:,.0f}'
+                }
+            },
+        series:dataSeriesCuentaCorriente
+    });
+
+var valoresParaSeries = [];
+var vendedorActual;
+var dataauxiliar = [];
+var dataSeriesOtrasFormasDePago = [];
+
+for (var i = 0; i < datatot.length; i++) {
+    if (datatot[i]['nombreVendedor'] != "" && datatot[i]['nombreVendedor'].indexOf("Total") == -1) {
+        vendedorActual = datatot[i]['nombreVendedor'];
+
+         band3 = true;
+        for (var k=0; k < dataCompensacion.length; k++) {
+            if (vendedorActual == dataCompensacion[k]['nombreVendedor']){
+                dataauxiliar.push(dataCompensacion[k]['CmsNeto']);
+                 band3 = false;
+            }
+        }
+        if (band3 == true) {
+            dataauxiliar.push(0);
+        }
+
+         band4 = true;
+        for (var l=0; l < dataCortesias.length; l++) {
+            if (vendedorActual == dataCortesias[l]['nombreVendedor']){
+                dataauxiliar.push(dataCortesias[l]['CmsNeto']);
+                 band4 = false;
+            }
+        }
+        if (band4 == true) {
+            dataauxiliar.push(0);
+        }
+         band5 = true;
+        for (var m=0; m < dataReposicion.length; m++) {
+            if (vendedorActual == dataReposicion[m]['nombreVendedor']){
+                dataauxiliar.push(dataReposicion[m]['CmsNeto']);
+                 band5 = false;
+            }
+        }
+        if (band5 == true) {
+            dataauxiliar.push(0);
+        }
+
+        //Lo siguiente se hace para que no inserte varias veces vendedores repetidos en la lista
+        band = true;
+        longitud = dataauxiliar.length;
+        for (var n=0; n < dataSeriesOtrasFormasDePago.length; n++) {
+            if (vendedorActual == dataSeriesOtrasFormasDePago[n]['name'] && longitud == dataSeriesOtrasFormasDePago[n]['data'].length ){
+                band = false;
+            }
+        }
+
+        if (band == true && (dataauxiliar[0] !=0 || dataauxiliar[1] !=0 || dataauxiliar[2] !=0)) {
+            dataSeriesOtrasFormasDePago.push({'type': 'column', 'name':vendedorActual, 'data': dataauxiliar});
+        }
+
+        dataauxiliar = [];
+
+    }
+
+
+
+}
+
+    $('#containerGraficoOtrasFormasDePago').highcharts({
+        title: {
+            text: 'Ventas de Centímetros por Vendedor y Forma de Pago'
+        },
+        xAxis: {
+            categories: ['Compensacion', 'Cortesias', 'Reposicion']
+        },
+       exporting: {
+                enabled: bandera
+            },
+         credits: {
+               enabled: false
+            },
+        yAxis: {
+                title: {
+                    text: 'Centímetros '
+                },
+                labels: {
+                    format: '{value:,.0f}'
+                }
+            },
+        series:dataSeriesOtrasFormasDePago
+    });
+
+
+
+
+});
+
+function desplegar(id){
+    $(".graficoVendedorFormaPago").hide();
+    if (id==1){
+        $("#containerGraficoContado").show();
+    }else if (id==2){
+        $("#containerGraficoCuentaCorriente").show();
+    }else if (id==3){
+        $("#containerGraficoOtrasFormasDePago").show();
+    }
+}
+
+
+function mostrarGrafico(){
+
+    if ( $(".graficoVendedorFormaPago").is(':visible')){
+        $(".graficoVendedorFormaPago").hide();
+         $(".gruopingContent").hide();
+    }else{
+        $("#containerGraficoContado").show();
+        $(".gruopingContent").show('slow');
+        $("#id_formaDePago_0").prop("checked", true);
+    }
+}
+
+</script>
+  {% block grafico %}
+
+
+            <script src="{{STATIC_URL}}js/highcharts.js"></script>
+            <!--<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>-->
+            <script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+              <center>
+                    <div class="graficoVendedorFormaPago" id="containerGraficoContado" style="margin-top:35px; width: 70%; height: 65%; "></div>
+                   <div class="graficoVendedorFormaPago" id="containerGraficoCuentaCorriente" style="display:none; margin-top:35px; width: 70%; height: 65%; "></div>
+                   <div class="graficoVendedorFormaPago" id="containerGraficoOtrasFormasDePago" style="display:none; margin-top:35px; width: 70%; height: 65%; "></div>
+
+                <div class="gruopingContent" >
+                  <ul>
+                  <li style="margin-left:-20px;"><label for="id_formaDePago_0"><input id="id_formaDePago_0" name="formaDePago" type="radio" value="1" checked="checked" onclick="desplegar(1)"/>  Contado </label></li>
+
+                  <li><label for="id_formaDePago_1"><input id="id_formaDePago_1" name="formaDePago" type="radio" value="2"  onclick="desplegar(2)"/> Cuenta Corriente  </label></li>
+
+                  <li><label for="id_formaDePago_2"><input id="id_formaDePago_2" name="formaDePago" type="radio" value="3"  onclick="desplegar(3)" /> Otras formas de pago  </label></li>
+                </ul>
+                </div>
+
+
+              </center>
+  {% endblock %}
+
+
+{% block navegacion %}
+    <div id="navegacion">
+        <a href="/reportesVendedor/listaVentasPorVendedor">Volver</a>
+
+
+
+    </div>
+
+  {% endblock %}
+
+
+ {% endblock %}
+

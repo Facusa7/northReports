@@ -1,0 +1,762 @@
+{% extends "base.html" %}
+
+
+
+
+{% block exportacion %}
+
+   <div id="exportacion">
+
+
+       <a href="javascript:void(0)" title="Ver/Ocultar Gr&aacute;fico de Centimetros por Formas de Pago" onclick="mostrarGraficoDesc()"><img src="{{STATIC_URL}}images/chart.png"></a>
+
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+
+    <style type="text/css">
+            .container{
+                margin-left:10px;
+                margin-top: 0px;
+            }
+
+            #exportacion {
+
+                 margin-left: 76%;
+
+            }
+            #navegacion {
+
+                margin-top: 90px;
+            }
+
+            #centroGrid{ min-height:200px; }
+
+            .ui-jqgrid .ui-jqgrid-view {  font-size: 13px;}
+
+            .clasepropia {
+                font-weight: bold !important;
+            }
+
+            .ui-widget-content .rowClass {
+                color: blue;  background-image: none; }
+
+            .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:19px;}
+
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 18px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 28px;
+            }
+            .ui-jqgrid .ui-jqgrid-titlebar {
+                font-size: 18px;
+                padding: 0.1em 0.1em 0.1em 2em;
+            }
+
+        </style>
+
+
+<h3>{{tit}} de {{codigoRemoto}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+<main id="centroGrid">
+<div align="center">
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+</div>
+</main>
+
+    <!--<table id="gridpager" class="scroll" style="text-align: center;"> </table>-->
+    <!--<div id="gridpager"></div>-->
+<script type="text/javascript">
+
+ //$(document).ready(function(){
+
+    jQuery("#list").jqGrid({
+    url:'/json_graficosFormasDePagoPorCms',
+    datatype: 'json',
+    mtype: 'GET',
+
+
+    colNames:['Forma de Pago','Centimetros'],
+
+    colModel :[
+      {name:'nombre',index:'nombre', width:350, editable:true, classes: 'clasepropia',
+          cellattr: function (rowId, tv, rawObject, cm, rdata) {
+            //console.log(rawObject);
+                if (rawObject.nombre == 'Compensacion') {
+                    return ' onclick="mostrarGraficoCompensacion()" title="Click para ver Centimetros Vendidos por Compensacion" rowId="Compensacion" style="color:blue; cursor: pointer;"'; //
+                }
+                if (rawObject.nombre == 'CuentaCorriente') {
+                    return ' onclick="mostrarGrafico()" title="Click para ver Centimetros Vendidos en Cuenta Corriente" style="color:blue; cursor: pointer;"';
+                }
+                if (rawObject.nombre == 'Efectivo') {
+                    return ' onclick="mostrarGraficoContado()" title="Click para ver Centimetros Vendidos al Contado/Efectivo" style="color:blue; cursor: pointer;"';
+                }
+                if (rawObject.nombre == 'Cortesias') {
+                    return ' onclick="mostrarGraficoCortesias()" title="Click para ver Centimetros de Cortesias" style="color:blue; cursor: pointer;"';
+                }
+                if (rawObject.nombre == 'Reposición') {
+                    return ' onclick="mostrarGraficoReposicion()" title="Click para ver Centimetros de Reposicion" style="color:blue; cursor: pointer;"';
+                }
+                if (rawObject.nombre == 'OtrasFormasDePago') {
+                    return ' onclick="mostrarGraficoOtrasFormasDePago()" title="Click para ver Centimetros obtenidos por otras Formas de Pago" style="color:blue; cursor: pointer;"';
+                }
+            }
+    },
+      {name:'cms',index:'cms',width:200,align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum'}
+
+    ],
+
+    rowNum:-1,
+    //rownumbers: true,
+    viewrecords: true,
+    emptyrecords : "No hay registros para mostrar",
+    height: 'auto',
+    sortorder: 'desc',
+    viewrecords: true,
+
+    //pager: $('#gridpager'),
+    //footerrow: true,
+
+    //loadOnce: true,
+    caption: 'Recargos y Descuentos en Anuncios'
+    //emptyDataText:'No hay registros'
+
+
+  });
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(1);
+   }
+
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+//});
+
+function mostrarGrafico(){
+
+    $(".shadow").slideDown();
+    $('#contenedorGraficos').show();
+    $('#graficoCuentaCorriente').show('slow');
+
+}
+
+function mostrarGraficoContado(){
+
+    $(".shadow").slideDown();
+    $('#contenedorGraficos').show();
+    $('#graficoContado').show('slow');
+
+    /*
+    if ($('#graficoContado').is(':visible')){
+        $('#graficoContado').hide('slow');
+    }else{
+        $('#graficoContado').show('slow');
+
+    }*/
+}
+
+function mostrarGraficoCompensacion(){
+
+
+
+        $(".shadow").slideDown();
+        $('#contenedorGraficos').show();
+        $('#graficoCompensacion').show('slow');
+
+
+/*
+
+    if ($('#graficoCompensacion').is(':visible')){
+        $('#graficoCompensacion').hide('slow');
+        }
+*/
+}
+
+function mostrarGraficoReposicion(){
+
+
+        $(".shadow").slideDown();
+        $('#contenedorGraficos').show();
+        $('#graficoReposicion').show('slow');
+
+}
+function mostrarGraficoCortesias(){
+
+     $(".shadow").slideDown();
+     $('#contenedorGraficos').show();
+    $('#graficoCortesias').show('slow');
+
+}
+function mostrarGraficoOtrasFormasDePago(){
+
+     $(".shadow").slideDown();
+     $('#contenedorGraficos').show();
+    $('#graficoOtrasFormasDePago').show('slow');
+
+}
+
+function mostrarGraficoDesc(){
+    if ($('#graficoFormasDePago').is(':visible')){
+        $('#graficoFormasDePago').hide('slow');
+    }else{
+        $('#graficoFormasDePago').show('slow');
+
+    }
+}
+
+$(function () {
+
+    var listaTotalCmsPorFormasDePago = {{listaParaGrafico | safe}};
+    //console.log(listaTotalCmsPorFormasDePago);
+    //+' '+parseFloat(listaParaGrafico[i].valor).toFixed(1)+'%'
+
+    var dataFormasDePago = [];
+
+    if (listaTotalCmsPorFormasDePago[0].porcCms != 0) {
+        dataFormasDePago.push(['Cuenta Corriente '+parseFloat(listaTotalCmsPorFormasDePago[0].porcCms).toFixed(1)+'%', parseFloat(listaTotalCmsPorFormasDePago[0].porcCms)]);
+    }
+    if (listaTotalCmsPorFormasDePago[1].porcCms != 0) {
+        dataFormasDePago.push(['Contado'+' '+parseFloat(listaTotalCmsPorFormasDePago[1].porcCms).toFixed(1)+'%', parseFloat(listaTotalCmsPorFormasDePago[1].porcCms)]);
+    }
+
+    if (listaTotalCmsPorFormasDePago[2].porcCms != 0) {
+        dataFormasDePago.push(['Reposicion'+' '+parseFloat(listaTotalCmsPorFormasDePago[2].porcCms).toFixed(1)+'%', parseFloat(listaTotalCmsPorFormasDePago[2].porcCms)]);
+    }
+    if (listaTotalCmsPorFormasDePago[3].porcCms != 0) {
+        dataFormasDePago.push(['Compensacion'+' '+parseFloat(listaTotalCmsPorFormasDePago[3].porcCms).toFixed(1)+'%', parseFloat(listaTotalCmsPorFormasDePago[3].porcCms)]);
+    }
+    if (listaTotalCmsPorFormasDePago[4].porcCms != 0) {
+        dataFormasDePago.push(['Cortesias'+' '+parseFloat(listaTotalCmsPorFormasDePago[4].porcCms).toFixed(1)+'%', parseFloat(listaTotalCmsPorFormasDePago[4].porcCms)]);
+    }
+    if (listaTotalCmsPorFormasDePago[5].porcCms != 0) {
+        dataFormasDePago.push(['Otras Formas de Pago'+' '+parseFloat(listaTotalCmsPorFormasDePago[5].porcCms).toFixed(1)+'%', parseFloat(listaTotalCmsPorFormasDePago[5].porcCms)]);
+    }
+
+
+
+
+    var listaCmsXCuentaCorriente = {{listaCmsXCuentaCorriente | safe}};
+
+    var dataCmsXCuentaCorriente = [];
+
+    for (i=0 ; i < listaCmsXCuentaCorriente.length; i++){
+        if (listaCmsXCuentaCorriente[i].porcentaje != 0){
+            dataCmsXCuentaCorriente.push([listaCmsXCuentaCorriente[i].aviso.toString()+' '+parseFloat(listaCmsXCuentaCorriente[i].porcentaje).toFixed(1)+'%', parseFloat(listaCmsXCuentaCorriente[i].porcentaje)]);
+        }
+    }
+
+     var listaCmsXContado = {{listaCmsXContado | safe}};
+
+    var dataCmsXContado = [];
+
+    for (i=0 ; i < listaCmsXContado.length; i++){
+        if (listaCmsXContado[i].porcentaje != 0){
+            dataCmsXContado.push([listaCmsXContado[i].aviso.toString()+' '+parseFloat(listaCmsXContado[i].porcentaje).toFixed(1)+'%', parseFloat(listaCmsXContado[i].porcentaje)]);
+        }
+    }
+
+     var listaCmsXCompensacion = {{listaCmsXCompensacion | safe}};
+
+    var dataCmsXCompensacion = [];
+
+    for (i=0 ; i < listaCmsXCompensacion.length; i++){
+        if (listaCmsXCompensacion[i].porcentaje != 0){
+            dataCmsXCompensacion.push([listaCmsXCompensacion[i].aviso.toString()+' '+parseFloat(listaCmsXCompensacion[i].porcentaje).toFixed(1)+'%', parseFloat(listaCmsXCompensacion[i].porcentaje)]);
+        }
+    }
+
+     var listaCmsXReposicion = {{listaCmsXReposicion | safe}};
+
+    var dataCmsXReposicion = [];
+
+    for (i=0 ; i < listaCmsXReposicion.length; i++){
+        if (listaCmsXReposicion[i].porcentaje != 0){
+            dataCmsXReposicion.push([listaCmsXReposicion[i].aviso.toString()+' '+parseFloat(listaCmsXReposicion[i].porcentaje).toFixed(1)+'%', parseFloat(listaCmsXReposicion[i].porcentaje)]);
+        }
+    }
+
+     var listaCmsXCortesias = {{listaCmsXCortesias | safe}};
+
+    var dataCmsXCortesias = [];
+
+    for (i=0 ; i < listaCmsXCortesias.length; i++){
+        if (listaCmsXCortesias[i].porcentaje != 0){
+            dataCmsXCortesias.push([listaCmsXCortesias[i].aviso.toString()+' '+parseFloat(listaCmsXCortesias[i].porcentaje).toFixed(1)+'%', parseFloat(listaCmsXCortesias[i].porcentaje)]);
+        }
+    }
+
+     var listaCmsXOtrasFormasDePago = {{listaCmsXOtrasFormasDePago | safe}};
+
+    var dataCmsXOtrasFormasDePago = [];
+
+    for (i=0 ; i < listaCmsXOtrasFormasDePago.length; i++){
+        if (listaCmsXOtrasFormasDePago[i].porcentaje != 0){
+            dataCmsXOtrasFormasDePago.push([listaCmsXOtrasFormasDePago[i].aviso.toString()+' '+parseFloat(listaCmsXOtrasFormasDePago[i].porcentaje).toFixed(1)+'%', parseFloat(listaCmsXOtrasFormasDePago[i].porcentaje)]);
+        }
+    }
+
+    //console.log(dataCmsXCuentaCorriente);
+
+var highchartsOptions = Highcharts.setOptions({
+      lang: {
+            loading: 'Aguarde...',
+            exportButtonTitle: "Exportar",
+            printButtonTitle: "Imprimir",
+            rangeSelectorFrom: "De",
+            rangeSelectorTo: "Hasta",
+            rangeSelectorZoom: "Periodo",
+            printChart: 'Imprimir Grafico',
+            downloadPNG: 'Descargar imagen en PNG',
+            downloadJPEG: 'Descargar imagen en JPEG',
+            downloadPDF: 'Descargar imagen en PDF',
+            downloadSVG: 'Descargar imagen en SVG'
+
+            }
+      }
+  );
+  var is_chrome = /chrome/i.test( navigator.userAgent );
+    if (is_chrome) {
+        bandera = false;
+    }else{
+        bandera = true;
+    }
+
+    $('#graficoFormasDePago').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: ' Centimetros Vendidos o Cedidos por Formas de Pago'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: dataFormasDePago
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+    //Esta es la parte de los porcentajes de los aviso por forma de pago de Cuenta Corriente
+     $('#graficoCuentaCorriente').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: ' Centimetros Vendidos en Cuenta Corriente discriminados por Tipo de Aviso'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: dataCmsXCuentaCorriente
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+
+    //Esta es la parte de los porcentajes de los aviso por forma de pago de Contado
+    $('#graficoContado').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: ' Centimetros Vendidos en Contado discriminados por Tipo de Aviso'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: dataCmsXContado
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+
+    //Esta es la parte de los porcentajes de los aviso por forma de pago de Compensacion
+    $('#graficoCompensacion').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: ' Centimetros Vendidos en Compensacion discriminados por Tipo de Aviso'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: dataCmsXCompensacion
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+
+    //Esta es la parte de los porcentajes de los aviso por forma de pago de Cortesias
+    $('#graficoCortesias').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: ' Centimetros Vendidos en Cortesias discriminados por Tipo de Aviso'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: dataCmsXCortesias
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+
+    //Esta es la parte de los porcentajes de los aviso por forma de pago de Reposicion
+    $('#graficoReposicion').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: ' Centimetros Vendidos en Reposicion discriminados por Tipo de Aviso'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: dataCmsXReposicion
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+
+    //Esta es la parte de los porcentajes de los aviso por Otras Formas de pago
+    $('#graficoOtrasFormasDePago').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: ' Centimetros Vendidos por Otras Formas de Pago discriminados por Tipo de Aviso'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: dataCmsXOtrasFormasDePago
+        }],
+        exporting: {
+                enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+
+
+});
+$(document).ready(function(){
+    $(".shadow").click(function(){
+                $(".shadow").slideUp();
+                if ($('#graficoCompensacion').is(':visible')){
+                    $("#graficoCompensacion").fadeOut();
+                }
+                if ($('#graficoContado').is(':visible')){
+                    $("#graficoContado").fadeOut();
+                }
+                if ($('#graficoCortesias').is(':visible')){
+                    $("#graficoCortesias").fadeOut();
+                }
+                if ($('#graficoReposicion').is(':visible')){
+                    $("#graficoReposicion").fadeOut();
+                }
+                if ($('#graficoCuentaCorriente').is(':visible')){
+                    $("#graficoCuentaCorriente").fadeOut();
+                }
+                if ($('#graficoOtrasFormasDePago').is(':visible')){
+                    $("#graficoOtrasFormasDePago").fadeOut();
+                }
+            });
+});
+
+ $(document).bind('keydown',function(e){
+    if ( e.which == 27 ) {
+              $(".shadow").slideUp();
+                if ($('#graficoCompensacion').is(':visible')){
+                    $("#graficoCompensacion").fadeOut();
+                }
+                if ($('#graficoContado').is(':visible')){
+                    $("#graficoContado").fadeOut();
+                }
+                if ($('#graficoCortesias').is(':visible')){
+                    $("#graficoCortesias").fadeOut();
+                }
+                if ($('#graficoReposicion').is(':visible')){
+                    $("#graficoReposicion").fadeOut();
+                }
+                if ($('#graficoCuentaCorriente').is(':visible')){
+                    $("#graficoCuentaCorriente").fadeOut();
+                }
+                if ($('#graficoOtrasFormasDePago').is(':visible')){
+                    $("#graficoOtrasFormasDePago").fadeOut();
+                }
+                };
+});
+
+</script>
+
+
+
+
+
+
+{% block grafico %}
+
+
+<script src="{{STATIC_URL}}js/highcharts.js"></script>
+<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
+<script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+
+
+<div class="shadow"></div>
+<center>
+
+
+   <div align="center" id="graficoFormasDePago" style="display:none; margin-top:30px;width:70%;"></div>
+
+<div id="contenedorGraficos">
+    <img style="margin-top:-20px;" class="x" src="{{STATIC_URL}}images/Letter-X-black-icon.png">
+
+   <div align="center" id="graficoCuentaCorriente"> </div>
+      <!--height: 400px;margin-top:0%;margin-bottom:2%;-->
+
+   <div align="center" id="graficoContado"></div>
+
+   <div align="center" id="graficoCortesias"></div>
+
+     <div align="center" id="graficoCompensacion"></div>
+
+     <div align="center" id="graficoReposicion"></div>
+
+     <div align="center" id="graficoOtrasFormasDePago"></div>
+
+</div>
+
+</center>
+{% endblock %}
+
+
+
+
+
+
+
+{% block navegacion %}
+    <div id="navegacion">
+
+        <a href="/ventasMensuales/" >Volver</a>
+
+
+        <!--<a href="/ventasMensuales/">Reportes de Ventas Mensuales</a>-->
+
+
+        <!--<a href="/menuReportesEstadisticos/">Reportes Estad&iacute;sticos</a>-->
+
+
+        <!--<a href="/">Men&uacute; Principal</a>-->
+
+
+
+    </div>
+
+
+  {% endblock %}
+
+
+
+
+
+ {% endblock %}
+

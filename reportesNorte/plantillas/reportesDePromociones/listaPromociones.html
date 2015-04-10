@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Detalle Cuenta Corriente
+{% endblock %}
+
+
+{% block exportacion %}
+
+{% endblock %}
+
+
+{%block contenido %}
+ <style type="text/css">
+            .mensajeReporte{
+                margin-top: 1%;
+                padding: 1%;
+            }
+            #centro{
+              min-height: 350px;
+            }
+
+        </style>
+
+
+
+
+
+  <main id="centro" style="height: 500px;">
+      <h3>Seleccione Promoci&oacute;n o Convenio</h3>
+<div id="cuadrilla">
+
+    <ul class="nav nav-justified">
+        <li><a href="/grupoPromocion/0" id="todas" onmouseover="muestra(id)" onmouseout="fuera(id)">Todas las Promociones</a></li>
+    </ul>
+
+    <ul class="nav nav-justified">
+
+        <li><a href="/grupoPromocion/1" style="padding:10px 0px" id="2x1" onmouseover="muestra(id)" onmouseout="fuera(id)">2 publicaciones = 1 sin cargo</a></li>
+
+        <li><a href="/grupoPromocion/2" style="padding:10px 0px" id="3x1" onmouseover="muestra(id)" onmouseout="fuera(id)">3 publicaciones = 1 sin cargo</a></li>
+
+        <li><a href="/grupoPromocion/3" style="padding:10px 0px" id="3x1-2x2" onmouseover="muestra(id)" onmouseout="fuera(id)">3 publicaciones = 1 sin cargo [2x2]</a></li>
+
+    </ul>
+
+     <ul class="nav nav-justified">
+
+        <li><a href="/grupoPromocion/4" style="padding:10px 10px" id="4omas50off" onmouseover="muestra(id)" onmouseout="fuera(id)">4 o m&aacute;s d&iacute;as = 50% Descuento</a></li>
+
+         <li><a href="/grupoPromocion/5" style="padding:10px 0px" id="5x1" onmouseover="muestra(id)" onmouseout="fuera(id)">5 publicaciones = 1 sin cargo</a></li>
+
+        <li><a href="/grupoPromocion/6" style="padding:10px 0px" id="7x3" onmouseover="muestra(id)" onmouseout="fuera(id)">7 publicaciones = 3 sin cargo</a></li>
+
+     </ul>
+
+     <ul class="nav nav-justified">
+
+        <li><a href="/grupoPromocion/7" style="padding:10px 12px" id="Ag3x1" onmouseover="muestra(id)" onmouseout="fuera(id)">Agencias Publican 3 = 1 sin cargo</a></li>
+
+        <li><a href="/grupoPromocion/8" style="padding:10px 15px" id="AgenciaCliente" onmouseover="muestra(id)" onmouseout="fuera(id)">Promo Agencia y Cliente</a></li>
+
+        <li><a href="/grupoPromocion/9" style="padding:10px 0px" id="camAutomotores" onmouseover="muestra(id)" onmouseout="fuera(id)">C&aacute;mara de Automotores</a></li>
+
+     </ul>
+
+     <ul class="nav nav-justified">
+
+        <li><a href="/grupoPromocion/A" id="camInmobiliaria" onmouseover="muestra(id)" onmouseout="fuera(id)">C&aacute;mara Inmobiliaria</a></li>
+
+        <li><a href="/grupoPromocion/B" id="sinPromocion" onmouseover="muestra(id)" onmouseout="fuera(id)">Sin Promoci&oacute;n</a></li>
+
+     </ul>
+
+
+    <ul style="margin-top: 15px;" class="nav nav-justified">
+
+      <li><a href="/grupoPromocion/D" id="Convenio" onmouseover="muestra(id)" onmouseout="fuera(id)">Convenios</a></li>
+
+    </ul>
+
+</div>
+
+
+<div class="mensajeReporte"></div>
+
+
+
+</main>
+
+<div id="navegacion">
+
+        <a href="/promociones/formPromociones">Volver</a>
+
+        <!--<a href="/menuReportesEstadisticos/">Reportes Estad&iacute;sticos</a>-->
+
+        <!--<a href="/">Men&uacute; Principal</a>-->
+
+
+
+</div>
+
+
+<script type="text/javascript">
+
+    function muestra(e){
+        if (e == 'todas'){
+            $('.mensajeReporte').html("<p>Obtendr&aacute; un res&uacutemen de todas las Promociones y un grafico de torta con las distintas promociones.</p>");
+
+        }
+        if (e == '2x1'){
+            $('.mensajeReporte').html('<p></p>');
+
+        }
+        if (e == '3x1'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == '3x1-2x2'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == '4omas50off'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == '5x1'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == '7x3'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == 'Ag3x1'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == 'AgenciaCliente'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == 'camAutomotores'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == 'camInmobiliaria'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+        if (e == 'sinPromocion'){
+            $('.mensajeReporte').html('<p>En esta se incluyen todos aquellos Anuncios, que no tienen días a bonificar.</p>');
+
+        }
+   }
+
+    function fuera(e){
+        if (e == 'todas'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == '2x1'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == '3x1'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == '3x1-2x2'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == '4omas50off'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == '5x1'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == '7x3'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'Ag3x1'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'AgenciaCliente'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'camAutomotores'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'camInmobiliaria'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'sinPromocion'){
+            $('.mensajeReporte').html("");
+        }
+
+    }
+</script>
+
+{% endblock %}

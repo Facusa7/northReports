@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+
+{% block exportacion %}
+
+
+   <div id="exportacion">
+        <a href="javascript:void(0)" title="Ver/Ocultar Gr&aacute;fico" onclick="mostrarGrafico()"><img src="{{STATIC_URL}}images/39-512.png"></a>
+
+       <a href="javascript:void(0)" title="Imprimir Reporte" onclick="printPage()"><img src="{{STATIC_URL}}images/Print-icon.png"></a>
+
+      <!--<a href="/exportarAPdf" title="Ver Reporte en PDF" target="_blank"><img src="{{STATIC_URL}}images/pdf-ico.png"></a>-->
+
+       <a href="/exportarAXls" title="Descargar Reporte en Excel" target="_blank" ><img src="{{STATIC_URL}}images/microsoft-excel.png"></a>
+
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+        <!--<a href="javascript:window.print()" class="boton">Click para sacar reporte</a>-->
+
+
+
+    <style type="text/css">
+            .container{
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 13px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 20px;
+            }
+
+             .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:16px; !important;}
+
+            #grupoAgrupadoPor .ui-jqgrid-view  {
+               font-size: 16px !important;
+            }
+            #grupoAgrupadoPor .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 22px;
+            }
+        </style>
+
+
+<h3>Resumen de {{tit}}  de {{codRemoto}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+
+<main id="centroGrid">
+<div id='grupoSinResumir' align="center">
+    <table id="listXCaptura" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+
+
+</div>
+
+</main>
+<script type="text/javascript">
+var datadiahora = {{ listaDiaHora | safe }}
+//console.log(datadiahora);
+
+
+titulo = '{{tit}}';
+primeraColumna = '{{agrupacion}}';
+//console.log(primeraColumna);
+
+  $("#listXCaptura").jqGrid({
+
+      datatype: 'local',
+      mtype: 'GET',
+      colNames:
+      [primeraColumna,'Total Cms','Desc Cms',
+      'Cms Neto', 'Bruto','Descuentos','Neto Sin Iva','% Cms','% Neto Sin Iva'
+       ],
+      colModel :[
+        {name:primeraColumna,index:primeraColumna, width:242,formatter: currencyFmatter},
+        {name:'TotalCms',index:'TotalCms',align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:100},
+        {name:'DescCms',index:'DescCms',align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+        {name:'CmsNeto',index:'CmsNeto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+        {name:'TotalBruto',index:'TotalBruto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+        {name:'TotalDescuento',index:'TotalDescuento', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+        {name:'NetoSinIva',index:'NetoSinIva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+        {name:'PorcentajeCms',index:'PorcentajeCms', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+        {name:'PorcentajeNetoSinIva',index:'PorcentajeNetoSinIva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:120}
+      ],
+      rowNum:-1,
+      height: 'auto',
+      sortorder: 'desc',
+      viewrecords: true,
+
+
+       footerrow: true,
+       userDataOnFooter: true,
+      caption: ' Resumido por ' + titulo,
+      rowattr: function (rd) {
+
+         if (rd.diaCaptura == 'Total General' || rd.horaCaptura == 'Total General' ) { // verify that the testing is correct in your case
+
+          return {"class": "rowClass"};
+      }
+     }
+  });
+
+           var mydata = [];
+           obj = datadiahora;
+           var names = [primeraColumna, "TotalCms", "DescCms", "CmsNeto", "TotalBruto", "TotalDescuento",
+           "NetoSinIva", "PorcentajeCms","PorcentajeNetoSinIva"];
+            for (var i = 0; i < obj.length; i++) {
+              mydata[i] = {};
+
+              mydata[i][names[0]] = obj[i][primeraColumna];
+              mydata[i][names[1]] = obj[i]['TotalCms'];
+              mydata[i][names[2]] = obj[i]['DescCms'];
+              mydata[i][names[3]] = obj[i]['CmsNeto'];
+              mydata[i][names[4]] = obj[i]['TotalBruto'];
+              mydata[i][names[5]] = obj[i]['TotalDescuento'];
+              mydata[i][names[6]] = obj[i]['NetoSinIva'];
+              mydata[i][names[7]] = obj[i]['PorcentajeCms'];
+              mydata[i][names[8]] = obj[i]['PorcentajeNetoSinIva'];
+
+
+            }
+            console.log(mydata);
+            for (var i = 0; i <= mydata.length; i++) {
+              $("#listXCaptura").jqGrid('addRowData', i + 1, mydata[i]);
+            }
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+function currencyFmatter (cellvalue, options, rowObject)
+{
+
+   var n = parseInt(cellvalue);
+   if (n<23){
+        return n+' (de '+n+' a '+(n+1)+')';
+   }else{
+    return cellvalue;
+   }
+
+
+}
+
+//Grafico de Linea
+
+if (primeraColumna == 'horaCaptura') {
+
+
+
+        $(function () {
+
+        var valoresEje = [null,null,null,null,null,null,null,null,null,null,null,null];
+        var data = datadiahora;
+
+        for (i = 0; i < data.length; i++) {
+           //Esto permite el dinamismo al momento de mostrar el grafico.
+
+                switch (data[i].horaCaptura) {
+                    case 6:
+                        valoresEje[0] = (parseFloat(data[i].TotalCms)).toFixed(2);
+                        break;
+                    case 7:
+                        valoresEje[1] = data[i].TotalCms;
+                        break;
+                    case 8:
+                        valoresEje[2] = data[i].TotalCms;
+                        break;
+                    case 9:
+                        valoresEje[3] = data[i].TotalCms;
+                        break;
+                    case 10:
+                        valoresEje[4] = data[i].TotalCms;
+                        break;
+                    case 11:
+                        valoresEje[5] = data[i].TotalCms;
+                        break;
+                    case 12:
+                        valoresEje[6] = data[i].TotalCms;
+                        break;
+                    case 13:
+                        valoresEje[7] = data[i].TotalCms;
+                        break;
+                    case 14:
+                        valoresEje[8] = data[i].TotalCms;
+                        break;
+                    case 15:
+                        valoresEje[9] = data[i].TotalCms;
+                        break;
+                    case 16:
+                        valoresEje[10] = data[i].TotalCms;
+                        break;
+                    case 17:
+                        valoresEje[11] = data[i].TotalCms;
+                        break;
+                    case 18:
+                        valoresEje[12] = data[i].TotalCms;
+                        break;
+                    case 19:
+                        valoresEje[13] = data[i].TotalCms;
+                        break;
+                    case 20:
+                        valoresEje[14] = data[i].TotalCms;
+                        break;
+                    case 21:
+                        valoresEje[15] = data[i].TotalCms;
+                        break;
+                    case 22:
+                        valoresEje[16] = data[i].TotalCms;
+                        break;
+                    case 23:
+                        valoresEje[17] = data[i].TotalCms;
+                        break;
+                }
+
+        }
+        var is_chrome = /chrome/i.test( navigator.userAgent );
+        if (is_chrome) {
+            bandera = false;
+        }else{
+            bandera = true;
+        }
+        //console.log(bandera);
+         var highchartsOptions = Highcharts.setOptions({
+            lang: {
+                loading: 'Aguarde...',
+                exportButtonTitle: "Exportar",
+                printButtonTitle: "Imprimir",
+                rangeSelectorFrom: "De",
+                rangeSelectorTo: "Hasta",
+                rangeSelectorZoom: "Periodo",
+                printChart: 'Imprimir Grafico',
+                downloadPNG: 'Descargar imagen en PNG',
+                downloadJPEG: 'Descargar imagen en JPEG',
+                downloadPDF: 'Descargar imagen en PDF',
+                downloadSVG: 'Descargar imagen en SVG'
+
+            }
+        });
+
+
+
+        $('#containerGrafico').highcharts({
+                chart: {
+                    type: 'line'
+                },
+                title: {
+                   text: 'Ventas Netas por ' + titulo
+                },
+                subtitle: {
+                    text: 'Evolución en centímetros'
+                },
+                xAxis: {
+                    categories: ['6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17',
+                    '18','19','20','21','22','23']
+                },
+                yAxis: {
+                    title: {
+                        text: 'Centímetros '
+                    },
+                    labels: {
+                        format: '{value:,.0f}'
+                    },
+                    min: 0
+                },
+                plotOptions: {
+                    line: {
+                        dataLabels: {
+                            enabled: true,
+                            format: '{point.y:.2f}'
+                        },
+                        enableMouseTracking: false
+                    }
+                },
+
+                series: [{
+                    name: 'Hora Captura',
+                    data: valoresEje
+                }],
+                exporting: {
+                    enabled: bandera
+                },
+                credits: {
+                   enabled: false
+                },
+        });
+
+    });
+}
+
+//Grafico por dia
+
+if (primeraColumna == 'diaCaptura') {
+
+        $(function () {
+
+        var valoresEje = [null,null,null,null,null,null,null];
+        var data = datadiahora;
+
+        for (i = 0; i < data.length; i++) {
+
+                switch (data[i].diaCaptura) {
+                    case 'Lunes':
+                        valoresEje[0] = data[i].TotalCms;
+                        break;
+                    case 'Martes':
+                        valoresEje[1] = data[i].TotalCms;
+                        break;
+                    case 'Miércoles':
+                        valoresEje[2] = data[i].TotalCms;
+                        break;
+                    case 'Jueves':
+                        valoresEje[3] = data[i].TotalCms;
+                        break;
+                    case 'Viernes':
+                        valoresEje[4] = data[i].TotalCms;
+                        break;
+                    case 'Sábado':
+                        valoresEje[5] = data[i].TotalCms;
+                        break;
+                    case 'Domingo':
+                        valoresEje[6] = data[i].TotalCms;
+                        break;
+
+                }
+
+        }
+        var is_chrome = /chrome/i.test( navigator.userAgent );
+        if (is_chrome) {
+            bandera = false;
+        }else{
+            bandera = true;
+        }
+        //console.log(bandera);
+         var highchartsOptions = Highcharts.setOptions({
+            lang: {
+                loading: 'Aguarde...',
+                exportButtonTitle: "Exportar",
+                printButtonTitle: "Imprimir",
+                rangeSelectorFrom: "De",
+                rangeSelectorTo: "Hasta",
+                rangeSelectorZoom: "Periodo",
+                printChart: 'Imprimir Grafico',
+                downloadPNG: 'Descargar imagen en PNG',
+                downloadJPEG: 'Descargar imagen en JPEG',
+                downloadPDF: 'Descargar imagen en PDF',
+                downloadSVG: 'Descargar imagen en SVG'
+
+            }
+        });
+
+
+
+        $('#containerGrafico').highcharts({
+                chart: {
+                    type: 'line'
+                },
+                title: {
+                    text: 'Ventas Netas por ' + titulo
+                },
+                subtitle: {
+                    text: 'Evolución en centímetros'
+                },
+                xAxis: {
+                    categories: ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
+                },
+                yAxis: {
+                    title: {
+                        text: 'Centímetros '
+                    },
+                    labels: {
+                        format: '{value:,.0f}'
+                    },
+                    min: 0
+                },
+                plotOptions: {
+                    line: {
+                        dataLabels: {
+                            enabled: true,
+                            format: '{point.y:.2f}'
+                        },
+                        enableMouseTracking: false
+                    }
+                },
+
+                series: [{
+                    name: 'Dia Captura',
+                    data: valoresEje
+                }],
+                exporting: {
+                    enabled: bandera
+                },
+                credits: {
+                   enabled: false
+                },
+        });
+
+    });
+}
+function mostrarGrafico(){
+
+    if ($('#containerGrafico').is(':visible')){
+        $('#containerGrafico').hide('slow');
+
+    }else{
+        $('#containerGrafico').show('slow');
+
+    }
+}
+
+</script>
+
+         {% block grafico %}
+
+
+            <script src="{{STATIC_URL}}js/highcharts.js"></script>
+            <!--<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>-->
+            <script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+              <center>
+                    <div id="containerGrafico" style="margin-top:35px; width: 70%; height: 65%; "></div>
+
+            </center>
+        {% endblock %}
+
+
+{% block navegacion %}
+    <div id="navegacion">
+        <a href="/ventasDiayHora/listaDiayHora">Volver</a>
+
+
+
+    </div>
+
+  {% endblock %}
+
+
+ {% endblock %}
+

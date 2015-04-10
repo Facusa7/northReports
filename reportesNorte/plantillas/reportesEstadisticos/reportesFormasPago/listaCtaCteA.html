@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Detalle Cuenta Corriente
+{% endblock %}
+
+
+{% block exportacion %}
+
+{% endblock %}
+
+
+{%block contenido %}
+ <style type="text/css">
+            .mensajeReporte{
+                margin-top: 1%;
+                padding: 1%;
+            }
+            #centro{
+              min-height: 350px;
+            }
+
+        </style>
+
+
+
+
+
+  <main id="centro">
+      <h3>Seleccione Tipo de Informe de Ventas</h3>
+<div id="cuadrilla">
+    <ul class="nav nav-justified">
+
+        <!--<p><a href="/cuentaCorrienteB" >Cuenta Corriente Bruto</a></p>-->
+
+        <li><a href="/cuentaCorrienteA" id="cc" onmouseover="muestra(id)" onmouseout="fuera(id)">Cuenta Corriente</a></li>
+    </ul>
+
+    <ul class="nav nav-justified">
+
+        <li><a href="/grupo/1" style="padding:10px 7px" id="interior" onmouseover="muestra(id)" onmouseout="fuera(id)">Interior</a></li>
+
+        <li><a href="/grupo/2" style="padding:10px 8px" id="capital" onmouseover="muestra(id)" onmouseout="fuera(id)">Capital</a></li>
+
+        <li><a href="/grupo/3" style="padding:10px 0px" id="oficiales" onmouseover="muestra(id)" onmouseout="fuera(id)">Oficiales</a></li>
+
+    </ul>
+
+     <ul class="nav nav-justified">
+
+
+
+        <li><a href="/grupo/4" id="ventura" onmouseover="muestra(id)" onmouseout="fuera(id)">Ventura</a></li>
+
+        <li><a href="/grupo/5" id="directas" onmouseover="muestra(id)" onmouseout="fuera(id)">Directas</a></li>
+
+        <li><a href="/grupo/6" id="canjes" onmouseover="muestra(id)" onmouseout="fuera(id)">Canjes</a></li>
+     </ul>
+
+
+
+
+
+
+
+</div>
+
+
+<div class="mensajeReporte"></div>
+
+
+
+</main>
+
+<div id="navegacion">
+
+        <a href="/reportesFormasDePago/">Volver</a>
+
+        <!--<a href="/menuReportesEstadisticos/">Reportes Estad&iacute;sticos</a>-->
+
+        <!--<a href="/">Men&uacute; Principal</a>-->
+
+
+
+</div>
+
+
+<script type="text/javascript">
+
+    function muestra(e){
+        if (e == 'cc'){
+            $('.mensajeReporte').html("<p>Obtendr&aacute; un reporte de las ventas producidas en Cta. Corriente agrupadas por tipos de clientes (Interior, Capital, Ventura, Oficiales, Canjes y Directas).</p>");
+
+        }
+        if (e == 'interior'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Interior" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'capital'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Capital" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'oficiales'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Oficiales" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'ventura'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Ventura" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'directas'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Directos" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'canjes'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Canjes" y los registros estan agrupados por Aviso.</p>');
+
+        }
+   }
+
+    function fuera(e){
+        if (e == 'cc'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'interior'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'capital'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'oficiales'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'ventura'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'interior'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'canjes'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'directas'){
+            $('.mensajeReporte').html("");
+        }
+
+    }
+</script>
+
+{% endblock %}

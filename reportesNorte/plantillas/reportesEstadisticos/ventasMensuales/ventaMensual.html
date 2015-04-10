@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+
+
+
+
+{% block exportacion %}
+
+   <div id="exportacion">
+
+        <a href="javascript:void(0)" id="sendEmail" title="Enviar por Correo este Reporte" ><img src="{{STATIC_URL}}images/email.png"></a>
+
+       <a href="javascript:void(0)" title="Ver/Ocultar Gr&aacute;fico" onclick="mostrarGrafico()"><img src="{{STATIC_URL}}images/chart.png"></a>
+
+       <a href="javascript:void(0)" title="Imprimir Reporte" onclick="printPage()"><img src="{{STATIC_URL}}images/Print-icon.png"></a>
+
+      <a href="/exportarAPdf" title="Ver Reporte en PDF" target="_blank"><img src="{{STATIC_URL}}images/pdf-ico.png"></a>
+
+       <a href="/exportarAXls" title="Descargar Reporte en Excel" target="_blank" ><img src="{{STATIC_URL}}images/microsoft-excel.png"></a>
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+
+    <style type="text/css">
+            .container{
+                margin-left:0px;
+                margin-top: 0px;
+            }
+
+            #exportacion {
+
+                 margin-left: 74%;
+
+            }
+            #navegacion {
+
+                margin-top: 90px;
+            }
+            #barraProgreso{
+                margin-top:0px;
+            }
+            #cuadrilla {
+                margin-top: 80px;
+            }
+
+            .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:19px;}
+
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 18px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 28px;
+            }
+            .ui-jqgrid .ui-jqgrid-titlebar {
+                font-size: 18px;
+                padding: 0.1em 0.1em 0.1em 2em;
+            }
+        </style>
+
+        <!--{% for elemento in listaParaGrafico  %}-->
+
+                <!--<input type="text" id={{elemento.nombre}} style="display:none;" value={{elemento.valor}} />-->
+        <!--{% endfor %}-->
+
+        <input type="text" id=fechaDesde style="display:none;" value={{fechaDesde}} />
+        <input type="text" id=fechaHasta style="display:none;" value={{fechaHasta}} />
+        <input type="text" id='idLineaPublicidad' style="display:none;" value={{id}} />
+
+
+<h3>{{tit}} de {{codigoRemoto}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+<div id="barraProgreso">
+    <label id="result">Enviando... </label>
+
+    <div id="progressbar"></div>
+</div>
+
+<main id="centroGrid">
+<div align="center">
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+</div>
+</main>
+
+    <!--<table id="gridpager" class="scroll" style="text-align: center;"> </table>-->
+    <!--<div id="gridpager"></div>-->
+<script type="text/javascript">
+ //$(document).ready(function(){
+
+    jQuery("#list").jqGrid({
+    url:'/verTotales',
+    datatype: 'json',
+    mtype: 'GET',
+
+    colNames:['Grupo','Centímetros','Neto sin Iva'],
+
+    colModel :[
+      {name:'Grupo',index:'Grupo', width:310, editable:true, formatter: currencyFmatter},
+      {name:'TotalCms',index:'TotalCms',width:310,align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum'},
+      {name:'NetoSinIva',index:'NetoSinIva', width:310,align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum'}
+
+    ],
+
+    rowNum:-1,
+    //rownumbers: true,
+    viewrecords: true,
+    emptyrecords : "No hay registros para mostrar",
+    height: 'auto',
+    sortorder: 'desc',
+    viewrecords: true,
+
+    //pager: $('#gridpager'),
+    footerrow: true,
+    userDataOnFooter: true,
+    //loadOnce: true,
+    caption: 'Ventas totales Publicidad',
+    emptyDataText:'No hay registros',
+    rowattr: function (rd) {
+       if (rd.Grupo == 8000) { // verify that the testing is correct in your case
+        return {"class": "rowClass"};
+    }
+   }
+
+  });
+
+
+function currencyFmatter (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return 'Registro/s indefinidos y/o sin Grupo';
+   }
+   if (cellvalue == 3) {
+        return 'Interior';
+   }
+   if (cellvalue == 4) {
+        return 'Capital';
+   }
+   if (cellvalue == 5) {
+        return 'Ventura';
+   }
+   if (cellvalue == 6) {
+        return 'Oficiales';
+   }
+   if (cellvalue == 7) {
+        return 'Canjes';
+   }
+   if (cellvalue == 9) {
+        return 'Directas';
+   }
+   if (cellvalue == 99) {
+        return 'Contado';
+   }
+
+   if (cellvalue == 8000) {
+        return 'Total: ';
+
+   }
+    if (cellvalue == 'algo') {
+        return '';
+   }
+
+}
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == ' ') {
+    return '';
+   }
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+//});
+
+function mostrarGrafico(){
+
+    if ($('#grafico').is(':visible')){
+        $('#grafico').hide('slow');
+    }else{
+        $('#grafico').show('slow');
+    }
+}
+
+
+
+
+$(function () {
+    var listaParaGrafico = {{listaParaGrafico | safe}};
+
+    var listaHighChart = [];
+
+    for (i=0 ; i < listaParaGrafico.length; i++){
+        if (listaParaGrafico[i].valor != 0){
+            listaHighChart.push([listaParaGrafico[i].nombre.toString()+' '+parseFloat(listaParaGrafico[i].valor).toFixed(2)+'%', parseFloat(listaParaGrafico[i].valor)]);
+        }
+    }
+
+
+
+var highchartsOptions = Highcharts.setOptions({
+      lang: {
+            loading: 'Aguarde...',
+            exportButtonTitle: "Exportar",
+            printButtonTitle: "Imprimir",
+            rangeSelectorFrom: "De",
+            rangeSelectorTo: "Hasta",
+            rangeSelectorZoom: "Periodo",
+            printChart: 'Imprimir Grafico',
+            downloadPNG: 'Descargar imagen en PNG',
+            downloadJPEG: 'Descargar imagen en JPEG',
+            downloadPDF: 'Descargar imagen en PDF',
+            downloadSVG: 'Descargar imagen en SVG'
+
+            }
+      }
+  );
+  var is_chrome = /chrome/i.test( navigator.userAgent );
+    if (is_chrome) {
+        bandera = false;
+    }else{
+        bandera = true;
+    }
+    $('#grafico').highcharts({
+        chart: {
+            type: 'pie',
+            options3d: {
+                enabled: true,
+                alpha: 45,
+                beta: 0
+            }
+        },
+        //options : highchartsOptions,
+
+        title: {
+            text: 'Representacion Grafica de Ventas Mensuales'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                depth: 35,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Porcentaje',
+            data: listaHighChart
+        }],
+        exporting: {
+            enabled: bandera
+        },
+        credits: {
+           enabled: false
+        },
+    });
+});
+
+
+
+$(document).ready(function(){
+    var fechad = $('#fechaDesde').val();
+
+    var diad = parseInt(fechad.substring(0,2));
+    var mesd = parseInt(fechad.substring(3,5));
+    var aniod = parseInt(fechad.substring(6,10));
+    var fechaDesde = new Date(aniod,(mesd - 1),diad);
+
+    var fechah = $('#fechaHasta').val();
+    diah = parseInt(fechah.substring(0,2));
+    mesh = parseInt(fechah.substring(3,5));
+    anioh = parseInt(fechah.substring(6,10));
+
+    var fechaHasta = new Date(anioh,(mesh - 1),diah);
+    fechaHasta.setDate(fechaHasta.getDate()+1);
+
+    //consulto se debe pregrentar por diferencia de meses igual a 1 en caso de que se pregunte por enero y febrero o cualquier otro par de meses donde el primero sea mayor al segundo. Pero la excepción
+    // se da cuando quiero consultar el mes de diciembre y el mes siguiente es enero en ese caso se produce una difencia de -11
+    if ((((fechaHasta.getMonth() - fechaDesde.getMonth()) == 1 ) || ((fechaHasta.getMonth() - fechaDesde.getMonth()) == -11 ) ) && ((fechaHasta.getDate() - fechaDesde.getDate()) == 0) && (diad == 1) ){
+
+        $('#guardarTotal').show();
+    }
+
+
+     //funciones js para que ponga en negro la pantalla y aparezca el cuadro de enviar correo
+        $("#sendEmail").click(function(){
+            console.log('hola');
+            $(".shadow").slideDown();
+            $("#enviarCorreo").fadeIn();
+        });
+
+        $(".shadow").click(function(){
+            $(".shadow").slideUp();
+            $("#enviarCorreo").fadeOut();
+        });
+        //-----------------------------------------------------------------------------------
+
+
+
+    //funcion ajax que envia correo-----------------------------------------
+        $("#button").click(function() {
+
+            band = false; band1 = false;
+
+            if ($('#asunto').val() === '') {
+                $('#eAsunto').show('slow');
+
+            }else{
+                $('#eAsunto').hide();
+                band = true;
+            }
+            if ($('#destinatario0').val() === '') {
+                $('#eDestinatario').show('slow');
+            }else{
+                $('#eDestinatario').hide();
+                 band1 = true;
+            }
+
+
+            if (band && band1 && band2){
+
+                var asunto = $("#asunto").val();
+
+
+                var destinatario0 = $('#destinatario0').val();
+                var destinatario1 = ''; var destinatario2 = ''; var destinatario3 = '';var destinatario4 = '';var destinatario5 = '';
+                var destinatario6 = '';var destinatario7 = ''; var destinatario8 = ''; var destinatario9 = ''; var destinatario10 = '';
+
+                if ($('#destinatario2').val() && !$('#mailFalse2').is(':visible')){
+                    destinatario2 = $('#destinatario2').val();
+                }
+                if ($('#destinatario1').val() && !$('#mailFalse1').is(':visible')){
+                    destinatario1 = $('#destinatario1').val();
+                }
+                if ($('#destinatario3').val() && !$('#mailFalse3').is(':visible')){
+                    destinatario3 = $('#destinatario3').val();
+                }
+                if ($('#destinatario4').val() && !$('#mailFalse4').is(':visible')){
+                    destinatario4 = $('#destinatario4').val();
+                }
+                if ($('#destinatario5').val() && !$('#mailFalse5').is(':visible')){
+                    destinatario5 = $('#destinatario5').val();
+                }
+                if ($('#destinatario6').val() && !$('#mailFalse6').is(':visible')){
+                    destinatario6 = $('#destinatario6').val();
+                }
+                if ($('#destinatario7').val() && !$('#mailFalse7').is(':visible')){
+                    destinatario7 = $('#destinatario7').val();
+                }
+                if ($('#destinatario8').val() && !$('#mailFalse8').is(':visible')){
+                    destinatario8 = $('#destinatario8').val();
+                }
+                if ($('#destinatario9').val() && !$('#mailFalse9').is(':visible')){
+                    destinatario9 = $('#destinatario9').val();
+                }
+                if ($('#destinatario10').val() && !$('#mailFalse10').is(':visible')){
+                    destinatario10 = $('#destinatario10').val();
+                }
+
+
+
+                var mailText = $('#mailText').val();
+
+                $(".shadow").slideUp();
+                $("#enviarCorreo").fadeOut();
+
+                $.ajax({
+                    url : "/enviarCorreoAjax",
+                    type : "POST",
+                    dataType: "json",
+                    data : {
+                        asunto : asunto,
+                        destinatario0 : destinatario0,
+                        destinatario1 : destinatario1,
+                        destinatario2 : destinatario2,
+                        destinatario3 : destinatario3,
+                        destinatario4 : destinatario4,
+                        destinatario5 : destinatario5,
+                        destinatario6 : destinatario6,
+                        destinatario7 : destinatario7,
+                        destinatario8 : destinatario8,
+                        destinatario9 : destinatario9,
+                        destinatario10 : destinatario10,
+                        mailText : mailText,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success : function(json) {
+                            $('#barraProgreso').hide();
+                            alert('Se ha enviado correctamente el correo' );
+
+                            //$('#result').append( 'Respuesta del Servidor: ' + json.asunto + json.destinatario + json.mailText );
+                        },
+                        beforeSend: function(){
+                              progreso();
+                              $('#result').text( 'Enviando correo, espere un momento... ');
+                        },
+                        error : function(xhr,errmsg,err) {
+                            $('#barraProgreso').hide();
+                            //alert(xhr.status + ": " + xhr.responseText); //debug = True
+                            alert('Lo sentimos, ha sucedido un error al enviar el correo');//debug = False
+                        }
+                });
+            }
+            return false;
+        });
+});
+    //---------------------------------------------------------------------------------------
+
+
+function IsEmail(email) {
+    if (email == ''){
+        return true;
+    }
+      var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+      return regex.test(email);
+    }
+
+    band2 = false;
+
+
+var count = 1;
+
+function addRow() {
+        console.log(count);
+        var nombre = '#correo'+count;
+        console.log(nombre);
+        $(nombre).show();
+        count++;
+        if (count==11){
+            $("#addEmail").hide();
+        }
+  }
+
+function verificarCorreo(correo){
+
+        var texto = $('#'+correo).val();
+        var num = correo;
+        num = num.substring(12,13);
+
+
+        var mjeAMostrar = '#mailFalse'+num;
+
+
+        if(!IsEmail(texto)) {
+                $(mjeAMostrar).show('slow');
+                console.log('mal');
+            }else{
+                $(mjeAMostrar).hide();
+                console.log('bien');
+                band2 = true;
+            }
+    }
+
+
+
+
+
+function comprobarMes(){
+    console.log($('#idLineaPublicidad'));
+    if ($('#idLineaPublicidad').val() == 0){
+
+        window.location = '/guardarTotales/';
+
+    }else{
+        if (window.confirm('El registro de este mes ya se encuentra guardado. ¿Desea sobreescribirlo?')){
+
+            window.location = '/guardarTotales/';
+        }
+        else
+        {
+            die();
+        }
+
+    }
+}
+
+function muestra(e){
+        if (e == 'graficoPorFormasDePago'){
+            $('.mensajeReporte').html("<p>Obtendr&aacute; los detalles de los cent&iacute;metros que fueron vendidos o cedidos seg&uacute;n las distintas formas de pago, y para estas discriminadas por tipo de aviso para el rango de fechas y provincia seleccionada. </p>");
+
+        }
+        if (e == 'graficosTotalesDescyRec'){
+            $('.mensajeReporte').html('<p>Obtendr&aacute; el detalle de recargos y descuentos en porcentajes seg&uacute;n el total de recargos y total de descuentos para el rango de fecha y provincia seleccionada </p>');
+
+        }
+
+   }
+
+    function fuera(e){
+        if (e == 'graficoPorFormasDePago'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'graficosTotalesDescyRec'){
+            $('.mensajeReporte').html('');
+        }
+    }
+
+
+function borrarCorreo(row){
+    var filaAEliminar = '#correo'+row;
+
+    $(filaAEliminar).remove();
+}
+
+</script>
+
+
+<center><a href="javascript:void(0)" id='guardarTotal' class="btn btn-default navbar-btn" style="display:none;" onclick="comprobarMes()">Guardar este Reporte</a></center>
+
+
+
+
+{% block grafico %}
+
+
+<script src="{{STATIC_URL}}js/highcharts.js"></script>
+<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
+<script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+  <center>
+
+   <div id="grafico" style="display:none;height: 400px;margin-top:5%;margin-left:5%;margin-bottom:2%;"></div>
+</center>
+{% endblock %}
+
+
+<div id="cuadrilla" class="infoAdicional">
+    <ul class="nav nav-justified">
+        <li><a href="/detalleCmsVendidosyCedidos/" id="graficoPorFormasDePago" onmouseover="muestra(id)" onmouseout="fuera(id)">Detalles de Cent&iacute;metros Vendidos y/o Cedidos</a></li>
+
+        <li><a href="/detalleRecargosyDescuentos" id="graficosTotalesDescyRec" onmouseover="muestra(id)" onmouseout="fuera(id)">Detalle de Recargos y Descuentos</a></li>
+
+    </ul>
+    <div class="mensajeReporte"></div>
+
+</div>
+
+
+
+
+
+{% block navegacion %}
+    <div id="navegacion">
+
+        <a href="/menuReportesEstadisticos/">Volver</a>
+
+        <!--<a href="/menuReportesEstadisticos/">Reportes Estad&iacute;sticos</a>-->
+
+
+
+        <!--<a href="/">Men&uacute; Principal</a>-->
+
+
+
+    </div>
+
+
+  {% endblock %}
+
+<div class="shadow"></div>
+
+  <div id="enviarCorreo" class="enviarCorreo">
+      <img class="x" src="{{STATIC_URL}}images/Letter-X-black-icon.png">
+		<h3>Enviar PDF por Correo</h3>
+        <form method="post" id="formEmail">
+            {% csrf_token %}
+            <TABLE BORDER="0" id="datosCorreo">
+
+                <TR>
+                   <TD><label>Asunto: </label></TD>
+                   <TD><input type="text" id="asunto"  placeholder="Ingrese asunto del correo"  name="asunto"/></TD>
+                   <TD><label id="eAsunto" class="errorFecha">Debe completar Asunto </label></TD>
+                </TR>
+                <TR>
+                   <TD><label>Destinatario/s: </label></TD>
+                   <TD><input type="text" id="destinatario0" placeholder="Ingrese correo destinatario" name="destinatario" onblur="verificarCorreo(this.id)"/></TD>
+
+                    <TD><label id="mailFalse0" class="errorFecha">El correo no es v&aacute;lido </label>
+
+                    <label id="eDestinatario" class="errorFecha">Debe completar correo destinatario </label></TD>
+
+                </TR>
+                <TR id="correo1" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario1" placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(1)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                     <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse1" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo2" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario2" placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(2)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse2" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+                </TR>
+                <TR id="correo3" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario3"  placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(3)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse3" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo4" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario4"  placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(4)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse4" class="errorFecha">El correo no es valido </label></TD>
+
+                </TR>
+                <TR id="correo5" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario5" placeholder="Ingrese otro correo destinatario"  onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(5)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse5" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo6" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario6" placeholder="Ingrese otro correo destinatario"  onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(6)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD><label id="mailFalse6" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo7" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario7" placeholder="Ingrese otro correo destinatario"  onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(7)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse7" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo8" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario8" placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(8)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD><label id="mailFalse8" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo9" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario9" placeholder="Ingrese otro correo destinatario"  onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(9)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse9" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo10" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                       <input type="text" id="destinatario10" placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(10)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse10" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR>
+                    <TD>
+                    </TD>
+                    <TD>
+                        <a href="javascript:void(0)" id="addEmail" onclick="addRow()"> Agregar otro correo: </a>
+                    </TD>
+
+                </TR>
+                <TR>
+                   <TD><label>Texto del Correo: </label></TD>
+                   <TD><textarea type="text" id="mailText" placeholder="Ingrese texto del correo a enviar..." name="mailText"></textarea></TD>
+
+                </TR>
+            </TABLE>
+
+
+        </form>
+        <center><input id="button" type="submit" class="btn btn-center" value="Enviar"></center>
+	</div>
+
+
+
+ {% endblock %}
+

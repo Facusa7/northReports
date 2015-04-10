@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Detalle Cuenta Corriente
+{% endblock %}
+
+
+{% block exportacion %}
+
+{% endblock %}
+
+
+{%block contenido %}
+ <style type="text/css">
+            .mensajeReporte{
+                margin-top: 1%;
+                padding: 1%;
+            }
+            #centro{
+              min-height: 300px;
+            }
+
+        </style>
+
+
+
+
+
+  <main id="centro">
+      <h3>Seleccione Informe</h3>
+<div id="cuadrilla">
+
+    <ul class="nav nav-justified">
+
+        <li><a href="/reportesVendedor/ventasVendedorPorHora" id="Dia" onmouseover="muestra(id)" onmouseout="fuera(id)">Ventas de Vendedor por Hora</a></li>
+
+        <li><a href="/reportesVendedor/ventasVendedorPorFormaPago" id="Hora" onmouseover="muestra(id)" onmouseout="fuera(id)">Ventas de Vendedor por Forma de Pago</a></li>
+
+
+
+    </ul>
+</div>
+    <div class="mensajeReporte"></div>
+
+
+
+</main>
+
+<div id="navegacion">
+
+        <a href="/ventasDiayHora/formVentasCaptura/">Volver</a>
+
+        <!--<a href="/menuReportesEstadisticos/">Reportes Estad&iacute;sticos</a>-->
+
+        <!--<a href="/">Men&uacute; Principal</a>-->
+
+
+
+</div>
+
+
+<script type="text/javascript">
+
+    function muestra(e){
+
+        if (e == 'Dia'){
+            $('.mensajeReporte').html('<p></p>');
+
+        }
+        if (e == 'Hora'){
+            $('.mensajeReporte').html('<p></p>');
+        }
+
+   }
+
+    function fuera(e){
+        if (e == 'Dia'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'Hora'){
+            $('.mensajeReporte').html("");
+        }
+
+    }
+</script>
+
+{% endblock %}

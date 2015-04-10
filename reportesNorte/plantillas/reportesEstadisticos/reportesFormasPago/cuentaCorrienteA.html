@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+
+
+
+{%block contenido  %}
+
+    <style type="text/css">
+            .container{
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:16px; !important;}
+           #cuentaCorrienteAgrupadoPor .ui-jqgrid-view  {
+               font-size: 16px !important;
+           }
+            #cuentaCorrienteAgrupadoPor .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 22px;
+            }
+    </style>
+
+
+
+<h3>{{tit}} de {{codigoRemoto}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+
+ <div class="gruopingContent">
+     <p> <ul>
+       {% if tit == 'Contado' %}
+            <li><label for="id_agruparPor_2"><input id="id_agruparPor_2" name="agruparPor" type="radio" value="3" checked/>Contado sin Resumir</label></li>
+
+            <li><label for="id_agruparPor_0"><input id="id_agruparPor_0" name="agruparPor" type="radio" value="1" />Contado Resumido por  Tipo de Aviso</label></li>
+
+       {% else %}
+          {% if tit == 'Cuenta Corriente' %}
+
+            <li><label for="id_agruparPor_2"><input id="id_agruparPor_2" name="agruparPor" type="radio" value="3" checked/>Cuenta Corriente sin Resumir</label></li>
+
+            <li><label for="id_agruparPor_0"><input id="id_agruparPor_0" name="agruparPor" type="radio" value="1" />Cuenta Corriente Resumido por  Tipo de Aviso</label></li>
+
+            <li><label for="id_agruparPor_1"><input id="id_agruparPor_1" name="agruparPor" type="radio" value="2" /> Cuenta Corriente Resumido por Tipo de Cliente</label></li>
+          {% else %}
+
+            <li><label for="id_agruparPor_2"><input id="id_agruparPor_2" name="agruparPor" type="radio" value="3" checked/>Sin Resumir</label></li>
+
+            <li><label for="id_agruparPor_0"><input id="id_agruparPor_0" name="agruparPor" type="radio" value="1" />Resumido por  Tipo de Aviso</label></li>
+
+            <li><label for="id_agruparPor_1"><input id="id_agruparPor_1" name="agruparPor" type="radio" value="2" />Resumido por Tipo de Cliente</label></li>
+          {% endif %}
+       {% endif %}
+
+        </ul>
+     </p>
+ </div>
+
+<input type="text" id="agrupacion"  style="display:none" value={{agrupacion}} />
+<input type="text" id="tit" style="display:none" value={{tit}} />
+
+<main id="centroGrid">
+<div id='cuentaCorrienteSinResumir' align="center">
+
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+</div>
+
+<div id='cuentaCorrienteAgrupadoPor' style="display:none;" align="center">
+
+    <table id="listXAviso" class="gridTotales"></table>
+</div>
+    <div id="result" align="center"></div>
+
+
+</main>
+<script type="text/javascript">
+  //$(document).ready(function(){
+    var agrupacion = $('#agrupacion').val();
+    var tit = $('#tit').val();
+    var titulo='';
+    if (agrupacion === 'Aviso' && tit ==='') {
+       titulo = 'Contado';
+       $('#btnVariable').hide();
+    }else{
+        if (tit === ''){
+                titulo =  'Cuenta Corriente';
+
+            }else {if (agrupacion === 'Grupo'){
+                    titulo = 'Cuenta Corriente';
+                    }else {
+                            titulo = tit;
+                            $('#btnVariable').hide();
+                    }
+            }
+    }
+    if (titulo === 'Cuenta Corriente'){
+        $('#menuCuentaCorriente').show();
+    }
+
+
+    //var listaauxiliar = []; var codigoAvisoAuxiliar = '';
+
+
+    $("#list").jqGrid({
+    url:'/verCCA',
+    datatype: 'json',
+    mtype: 'GET',
+    colNames:
+
+    ['Grupo',
+    'Ag. Cliente',
+    'Aviso',
+    'Total Cms',
+    'Desc Cms',
+    'Cms Neto',
+    'V. Anuncio',
+    'Rec. Color',
+    'Rec. Logo',
+    'Desc. Manual',
+    'Tot. Recargo',
+    'Tot. Bruto',
+    'Desc. Promocion',
+    'Desc. Convenio',
+     'Com Agencia',
+     'Desc. Agencia',
+     'Total Desc.',
+     'Neto Sin Iva'
+     ],
+
+    colModel :[
+      {name:'Grupo',index:'Grupo', width:55, editable:true, summaryTpl : '({0}) total', formatter:currencyFmatter},
+      {name:'AgenciaCliente',index:'AgenciaCliente', width:100},
+      {name:'Aviso',index:'Aviso', width:100,
+        cellattr: function (rowId, tv, rawObject, cm, rdata){
+            if (rawObject != null){
+                listaauxiliar.push(rawObject);
+                codigoAvisoAuxiliar = rawObject.CodigoAviso;
+                return ' onclick ="mostrarDetalleFila(event,' + '\'' +codigoAvisoAuxiliar + '\'' + ')" title="Click para ver detalles del aviso"  style="color:blue; cursor: pointer;" ';
+            }
+        }
+      },
+      {name:'TotalCms',index:'TotalCms',align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:50},
+      {name:'DescCms',index:'DescCms',align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'CmsNeto',index:'CmsNeto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'ValorAnuncio',index:'ValorAnuncio', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'RecargoColor',index:'RecargoColor', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'RecargoLogo', index:'RecargoLogo', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'DescManual',index:'DescManual', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'TotalRecargo',index:'TotalRecargo', align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:75},
+      {name:'TotalBruto',index:'TotalBruto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'DescPromocion',index:'DescPromocion', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'DescConvenio',index:'DescConvenio', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'ComAgencia',index:'ComAgencia', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'DescAgencia',index:'DescAgencia', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'TotalDescuento',index:'TotalDescuento', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'NetoSinIva',index:'NetoSinIva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75}
+    ],
+    rowNum:-1,
+    height: 'auto',
+    pager: $('#gridpager'),
+   // width: 'auto',
+    //sortname: 'field1',
+    sortorder: 'desc',
+    viewrecords: true,
+    grouping: true,
+        groupingView :  {
+        groupField : [$('#agrupacion').val()],
+        groupColumnShow : [true],
+        groupText : ['<b>{0}</b>'],
+        groupCollapse : true,
+        groupOrder: ['asc'],
+        groupSummary : [true],
+        showSummaryOnHide: true,
+        groupDataSorted : true },
+     footerrow: true,
+     userDataOnFooter: true,
+     caption: titulo
+
+  });
+//});
+
+function currencyFmatter (cellvalue, options, rowObject)
+{
+   if (cellvalue == 3) {
+        return 'Interior';
+   }
+   if (cellvalue == 4) {
+        return 'Capital';
+   }
+   if (cellvalue == 5) {
+        return 'Ventura';
+   }
+   if (cellvalue == 6) {
+        return 'Oficiales';
+   }
+   if (cellvalue == 7) {
+        return 'Canjes';
+   }
+   if (cellvalue == 9) {
+        return 'Directas';
+   }
+   if (cellvalue == 10) {
+        return 'Directas';
+   }
+   if (cellvalue == 99) {
+        return 'Contado';
+   }
+}
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+$('input:radio[name=agruparPor]').click(function() {
+    var primeraColumna = '';
+    var ejeXparaGrafico = [];
+    var ejeYparaGrafico = [];
+    //console.log('entro porque seleccionó una forma de agrupar');
+        var agrupacion = 3;
+        if ($('input:radio[id=id_agruparPor_0]:checked').val()){
+            agrupacion = 1;
+            primeraColumna = 'Aviso';
+        } else { if ($('input:radio[id=id_agruparPor_1]:checked').val()){
+                    agrupacion = 2;
+                    primeraColumna = 'Grupo';
+                }
+        }
+
+        if (agrupacion == 1  || agrupacion == 2) {
+            if ($('#cuentaCorrienteSinResumir').is(':visible')){
+                             $('#cuentaCorrienteSinResumir').hide();
+            }
+            $.ajax({
+                url : "/cuentaCorrienteA/",
+                type : "POST",
+                dataType: "json",
+                data : {
+                    agrupacion : agrupacion,
+                    tit: tit,
+
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success : function(json) {
+
+                        $('#cuentaCorrienteAgrupadoPor').show();
+
+
+                        if (json.agrupacion == 1){
+                            var dataCuentaCorrientePorAviso = json.listaCuentaCorrientePorAviso
+                            var json = dataCuentaCorrientePorAviso;
+
+                        } else {
+                            var dataCuentaCorrientePorCliente = json.listaCuentaCorrientePorCliente
+                            var json = dataCuentaCorrientePorCliente;
+                         }
+                            obj = $.parseJSON(json)
+
+                        // ###############JqGrid de Cuenta Corriente resumido  por Ajax##########
+                            $("#listXAviso").jqGrid({
+
+                                datatype: 'local',
+                                mtype: 'GET',
+                                colNames:
+                                [primeraColumna,'Total Cms','Desc Cms',
+                                'Cms Neto', 'Bruto','Descuentos','Neto Sin Iva','% Cms','% Neto Sin Iva'
+                                 ],
+                                colModel :[
+                                  {name:primeraColumna,index:primeraColumna, width:285},
+                                  {name:'TotalCms',index:'TotalCms',align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:100},
+                                  {name:'DescCms',index:'DescCms',align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+                                  {name:'CmsNeto',index:'CmsNeto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+                                  {name:'TotalBruto',index:'TotalBruto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+                                  {name:'TotalDescuento',index:'TotalDescuento', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+                                  {name:'NetoSinIva',index:'NetoSinIva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+                                  {name:'PorcentajeCms',index:'PorcentajeCms', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+                                  {name:'PorcentajeNetoSinIva',index:'PorcentajeNetoSinIva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:120}
+                                ],
+                                rowNum:-1,
+                                height: 'auto',
+                                sortorder: 'desc',
+                                viewrecords: true,
+
+
+                                 footerrow: true,
+                                 userDataOnFooter: true,
+                                //caption: 'Cuenta Corriente Resumido por ' + primeraColumna,
+                                  caption:  titulo + ' Resumido por ' + primeraColumna,
+                                rowattr: function (rd) {
+
+                                   if (rd.Aviso == 'Total General' || rd.Grupo == 'Total General' ) { // verify that the testing is correct in your case
+
+                                    return {"class": "rowClass"};
+                                }
+                               }
+                              });
+
+                             var mydata = [];
+
+                             var names = [primeraColumna, "TotalCms", "DescCms", "CmsNeto", "TotalBruto", "TotalDescuento",
+                             "NetoSinIva", "PorcentajeCms","PorcentajeNetoSinIva"];
+                              for (var i = 0; i < obj.length; i++) {
+                                mydata[i] = {};
+
+                                mydata[i][names[0]] = obj[i][primeraColumna];
+                                mydata[i][names[1]] = obj[i]['TotalCms'];
+                                mydata[i][names[2]] = obj[i]['DescCms'];
+                                mydata[i][names[3]] = obj[i]['CmsNeto'];
+                                mydata[i][names[4]] = obj[i]['TotalBruto'];
+                                mydata[i][names[5]] = obj[i]['TotalDescuento'];
+                                mydata[i][names[6]] = obj[i]['NetoSinIva'];
+                                mydata[i][names[7]] = obj[i]['PorcentajeCms'];
+                                mydata[i][names[8]] = obj[i]['PorcentajeNetoSinIva'];
+
+                                if (obj[i][primeraColumna] != '' && obj[i][primeraColumna] != 'Total General') {
+                                     ejeXparaGrafico.push(obj[i][primeraColumna]);
+                                     ejeYparaGrafico.push(parseFloat(obj[i]['TotalCms'].toFixed(2)));
+                                }
+
+                              }
+                              console.log(mydata);
+
+                              for (var i = 0; i <= mydata.length; i++) {
+                                $("#listXAviso").jqGrid('addRowData', i + 1, mydata[i]);
+                              }
+
+                                //Aquí el gráfico de barras
+                                if (obj.length>2) {
+                                    var highchartsOptions = Highcharts.setOptions({
+                                          lang: {
+                                                loading: 'Aguarde...',
+                                                exportButtonTitle: "Exportar",
+                                                printButtonTitle: "Imprimir",
+                                                rangeSelectorFrom: "De",
+                                                rangeSelectorTo: "Hasta",
+                                                rangeSelectorZoom: "Periodo",
+                                                printChart: 'Imprimir Grafico',
+                                                downloadPNG: 'Descargar imagen en PNG',
+                                                downloadJPEG: 'Descargar imagen en JPEG',
+                                                downloadPDF: 'Descargar imagen en PDF',
+                                                downloadSVG: 'Descargar imagen en SVG'
+
+                                                }
+                                          }
+                                         );
+
+                                         /*Esto es porque en el Chrome se rompe la exportación*/
+                                        var is_chrome = /chrome/i.test( navigator.userAgent );
+                                        if (is_chrome) {
+                                            bandera = false;
+                                        }else{
+                                            bandera = true;
+                                        }
+
+                                        $('#grafico').highcharts({
+                                            chart: {
+                                                type: 'column',
+                                                margin: 80,
+                                                options3d: {
+                                                    enabled: true,
+                                                    alpha: 10,
+                                                    beta: 0,
+                                                    depth: 30
+                                                }
+                                            },
+                                            title: {
+                                                text: 'Grafico de Centímetros Vendidos según ' + primeraColumna
+                                            },
+                                            subtitle: {
+                                                text: ''
+                                            },
+                                            plotOptions: {
+                                                column: {
+                                                    depth: 25
+                                                }
+                                            },
+                                            xAxis: {
+                                                categories: ejeXparaGrafico,
+                                                 tickLength: 160,
+                                                 labels: {
+                                                        // ...
+                                                        formatter: function() {
+                                                           if (agrupacion==2) {
+                                                              var temp = this.value.length > 11 ? this.value.slice(0, 8)+'' : this.value;
+                                                              return '<span title="Investment breakdown for '+ this.value +'">' + temp + '</span>';
+                                                            }
+                                                            return this.value;
+                                                        },
+                                                        useHTML: true,
+                                                 }
+                                            },
+                                            yAxis: {
+                                                opposite: false,
+                                                title: '',
+                                                labels: {
+                                                    format: '{value:,.0f}'
+                                                }
+                                            },
+                                            credits: {
+                                               enabled: false
+                                            },
+                                            exporting: {
+                                                enabled: bandera
+                                            },
+
+                                            series: [{
+                                                showInLegend: false,
+                                                name: 'Centímetros',
+
+                                                data: ejeYparaGrafico
+                                            }]
+                                        });
+
+
+                                        $('#grafico').show();
+                                }
+                                $('#result').text( '');
+                    },
+                    beforeSend: function(){
+                        $('#listXAviso').jqGrid('GridUnload'); // Esto es para que recargue el grid con el contenido.
+                         $('#grafico').hide();
+                        $('#result').text( 'Aguarde...');
+
+                    },
+                    error : function(xhr,errmsg,err) {
+                        //$('#barraProgreso').hide();
+                        $('#result').text( '');
+                        //alert(xhr.status + ": " + xhr.responseText); //debug = True
+                        alert('Lo sentimos, ha sucedido un error para obtener los datos.');//debug = False
+                    }
+
+            });
+
+        }else {
+            if ($('#cuentaCorrienteAgrupadoPor').is(':visible')){
+                 $('#cuentaCorrienteAgrupadoPor').hide();
+                 $('#grafico').hide();
+            }
+            $.ajax({
+                url : "/cuentaCorrienteA/",
+                type : "POST",
+                dataType: "json",
+                data : {
+                    agrupacion : agrupacion,
+                    tit: tit,
+
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success : function(json) {
+                        $('#cuentaCorrienteSinResumir').show();
+                        $('#result').text('');
+                    },
+                    beforeSend: function(){
+                        $('#listXAviso').jqGrid('GridUnload'); // Esto es para que recargue el grid con el contenido.
+                         $('#grafico').hide();
+                        $('#result').text( 'Aguarde...');
+
+                    },
+                    error : function(xhr,errmsg,err) {
+                        //$('#barraProgreso').hide();
+                        $('#result').text( '');
+                        //alert(xhr.status + ": " + xhr.responseText); //debug = True
+                        alert('Lo sentimos, ha sucedido un error para obtener los datos.');//debug = False
+                    }
+
+            });
+        }
+
+});
+
+</script>
+
+
+{% block grafico %}
+
+
+<script src="{{STATIC_URL}}js/highcharts.js"></script>
+<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
+<script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+  <center>
+
+   <div id="grafico" style="display:none; height: 500px;margin-top:0%;margin-left:2%;margin-bottom:2%; width: 100%"></div>
+
+</center>
+{% endblock %}
+
+
+    {% block navegacion %}
+        <div id="navegacion">
+
+            {% if agrupacion == 'Grupo' %}
+                <a id ='btnVariable' href="/listaCtaCteA/">Volver</a>
+
+
+            {% else %}
+
+                <a href="/reportesFormasDePago/">Volver </a>
+             {% endif %}
+
+            <!--<a href="/menuReportesEstadisticos/">Reportes Estad&iacute;sticos</a>-->
+
+            <!--<a href="/">Men&uacute; Principal</a>-->
+
+        </div>
+
+    {% endblock %}
+
+
+
+
+
+{% endblock %}
+

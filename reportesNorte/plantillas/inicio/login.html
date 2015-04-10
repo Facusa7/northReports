@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Ingreso al Sistema de Reportes
+{% endblock %}
+
+{% block exportacion %}
+
+{% endblock %}
+
+{%block contenido %}
+
+
+  <main style="margin-top:3%;" class="tooltip-inner modal-content">
+  <h1>Ingreso al Sistema de reportes</h1>
+
+   <form id='formulario'   method='post' action='' style="margin-top:40px;"> {% csrf_token %}
+       {{formulario.as_p}}
+       <div id="mensajeError">
+          {% if message != None  %}
+            {{ message}}
+          {% endif  %}
+       </div>
+
+       <p><input id = 'btnIngresar' type='submit' value='Ingresar' class="btn btn-primary btn-lg"/></p>
+   </form>
+
+
+
+  </main>
+
+<!--<div id="repro">-->
+<!--<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,19,0" width="250" height="60">-->
+    <!--<param name="movie" value="http://www.raddios.com/raddiosplayer.swf?swfstreamurl=http://96.31.66.129:43606&swfcolor=45AFE1&swfradiochannel=RADIO UNIVERSIDAD - R a d d i o s . c o m" />-->
+      <!--<param name="quality" value="high" />-->
+      <!--<param name="wmode" value="opaque">-->
+     <!--<embed src="http://www.raddios.com/raddiosplayer.swf?swfstreamurl=http://96.31.66.129:43606&swfcolor=45AFE1&swfradiochannel=RADIO UNIVERSIDAD - R a d d i o s . c o m" quality="high" pluginspage="http://www.macromedia.com/go/getflashplayer" wmode="opaque" type="application/x-shockwave-flash" width="250" height="60"></embed>-->
+<!--</object>-->
+<!--</div>-->
+
+
+{% endblock %}

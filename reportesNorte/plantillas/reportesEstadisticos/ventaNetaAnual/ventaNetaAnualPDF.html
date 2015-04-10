@@ -1,0 +1,349 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <title>Reportes</title>
+        <style type="text/css">
+            @page {
+                size: a4 landscape;
+                margin: 2cm 0.5cm 2.2cm 0.5cm;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-top: 8px;
+
+                @frame header {
+                    -pdf-frame-content: headerContent;
+                    margin-left: 1cm;
+                    margin-right: 1cm;
+                    margin-bottom:4cm;
+                    height: 2.1cm;
+                }
+                @frame footer {
+                    -pdf-frame-content: footerContent;
+                    bottom: 0.5cm;
+                    margin-left: 1cm;
+                    margin-right: 1cm;
+                    height: 1cm;
+                    padding-top: 10px;
+                }
+            }
+
+            #report_lists {
+                border: 1px solid #ccc;
+                font-size: 10px;
+                padding-top: 5px;
+                table-layout: fixed;
+                -pdf-keep-in-frame-mode: none;
+            }
+            #report_head {
+                background-color: #ccc;
+                font-size: 8px;
+                padding: 5px;
+            }
+            #headerComun{
+                padding: 5px;
+            }
+            table {
+                -pdf-keep-in-frame-mode: none;
+            }
+
+
+        </style>
+    </head>
+    <body>
+
+        <div id="headerContent">
+
+            <table><tr><td align="center"><img src="{{MEDIA_URL}}images/Encabezado_Norte.jpg" height="300"  width="4000"></td>
+
+                   </tr>
+            </table>
+
+
+        </div>
+<br/>
+        <div id="headerComun">
+
+            <table><tr>
+                    <td align="center">Venta Neta Anual de Publicidad en {{provincia}}</td>
+                   </tr>
+            </table>
+
+
+        </div>
+
+
+        <table id="report_lists">
+            <thead id="report_head">
+                <tr>
+
+
+                        <th align="vmiddle" style="background-color: #ccc; padding: 3px">Año</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Mes</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Directas CMS</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Directas Neto Sin Iva</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Capital CMS</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Capital Neto Sin Iva</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Interior CMS</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Interior Neto Sin Iva</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Ventura CMS</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Ventura Neto Sin Iva</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Oficiales CMS</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Oficiales Neto Sin Iva</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Canjes CMS</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Canjes Neto Sin IVa</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Contado CMS</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Contado Neto Sin Iva</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Total CMS</th>
+                        <th align="vmiddle" style="background-color: #ccc;">Total Neto Sin Iva</th>
+                        <!--<th align="vmiddle" style="background-color: #ccc;">Usuario</th>-->
+                        <!--<th align="vmiddle" style="background-color: #ccc;">Provincia</th>-->
+                        <!--<th align="vmiddle" style="background-color: #ccc;">Fecha Guardado</th>
+                        ; -->
+                </tr>
+
+            </thead>
+
+                        {% for obj in object_lists %}
+
+
+                            <tr style="font-weight: bold;">
+
+                                <td align="center">{{ obj.anio }}</td>
+                                <td align="center">{{ obj.mes }}</td>
+                                <td align="center">
+
+                                    {% if obj.directas_cms == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.directas_cms != 0 %}
+                                        {{ obj.directas_cms|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td align="center">
+                                    {% if obj.directas_neto_sin_iva == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.directas_neto_sin_iva != 0 %}
+                                        {{ obj.directas_neto_sin_iva|floatformat:2 }}
+                                    {% endif %}
+
+
+
+                                 </td>
+
+                                <td align="center">
+                                    {% if obj.capital_cms == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.capital_cms != 0 %}
+                                        {{ obj.capital_cms|floatformat:2 }}
+                                    {% endif %}
+
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.capital_neto_sin_iva == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.capital_neto_sin_iva != 0 %}
+                                        {{ obj.capital_neto_sin_iva|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.interior_cms == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.interior_cms != 0 %}
+                                        {{ obj.interior_cms|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.interior_neto_sin_iva == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.interior_neto_sin_iva != 0 %}
+                                        {{ obj.interior_neto_sin_iva|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.ventura_cms == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.ventura_cms != 0 %}
+                                        {{ obj.ventura_cms|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.ventura_neto_sin_iva == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.ventura_neto_sin_iva != 0 %}
+                                        {{ obj.ventura_neto_sin_iva|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                               <td style= "padding 2px" align="right">
+
+                                    {% if obj.oficiales_cms == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.oficiales_cms != 0 %}
+                                        {{ obj.oficiales_cms|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.oficiales_neto_sin_iva == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.oficiales_neto_sin_iva != 0 %}
+                                        {{ obj.oficiales_neto_sin_iva|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.canjes_cms == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.canjes_cms != 0 %}
+                                        {{ obj.canjes_cms|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.canjes_neto_sin_iva == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.canjes_neto_sin_iva != 0 %}
+                                        {{ obj.canjes_neto_sin_iva|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.contado_cms == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.contado_cms != 0 %}
+                                        {{ obj.contado_cms|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.contado_neto_sin_iva == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.contado_neto_sin_iva != 0 %}
+                                        {{ obj.contado_neto_sin_iva|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.total_cms == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.total_cms != 0 %}
+                                        {{ obj.total_cms|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+                                <td style= "padding 2px" align="right">
+
+                                    {% if obj.total_neto_sin_iva == 0 %}
+                                        --
+                                    {% endif %}
+
+                                    {% if obj.total_neto_sin_iva != 0 %}
+                                        {{ obj.total_neto_sin_iva|floatformat:2 }}
+                                    {% endif %}
+
+                                </td>
+
+                                 <!--<td style= "padding 2px" align="right">-->
+
+                                    <!--{{ obj.usuario }}-->
+
+
+                                <!--</td>-->
+
+
+                                <!--<td style= "padding 2px" align="right">-->
+
+                                    <!--{{  obj.codigo_remoto }}-->
+
+
+                                <!--</td>-->
+
+                                <!--<td style= "padding 2px" align="right">-->
+
+                                   <!--{{ obj.fechaGuardado }}-->
+
+
+                                <!--</td>-->
+
+                           </tr>
+
+
+                       {% endfor %}
+
+              <!--<div style=" page-break-after: always;"></div>-->
+
+
+        </table>
+
+        <div id="footerContent">
+
+            <table>
+                    <tr>
+                       <td>Usuario:{{ nombreUsuario }} </td>
+                       <td>Emitido: {% now "d M Y - h:m:s" %}</td>
+                       <td align="center">Sistema de Reporte de Pasantes</td>
+                       <td align="center"> Página: <pdf:pagenumber> / <pdf:pagecount> </td>
+
+                    </tr>
+            </table>
+
+        </div>
+    </body>
+    </html>

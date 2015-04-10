@@ -1,0 +1,741 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Resultado de la inserción
+{% endblock %}
+
+{% block exportacion %}
+
+
+<div id="exportacion" xmlns="http://www.w3.org/1999/html">
+
+    <a href="javascript:void(0)" title="Ver/Ocultar Gr&aacute;fico" onclick="mostrarGrafico()"><img src="{{STATIC_URL}}images/39-512.png"></a>
+
+    <a href="javascript:void(0)" id="sendEmail" title="Enviar por Correo este Reporte" ><img src="{{STATIC_URL}}images/email.png"></a>
+
+       <a href="javascript:void(0)" title="Imprimir Reporte" onclick="printPage()"><img src="{{STATIC_URL}}images/Print-icon.png"></a>
+
+      <a href="/exportarAPdf" title="Ver Reporte en PDF" target="_blank"><img src="{{STATIC_URL}}images/pdf-ico.png"></a>
+
+       <a href="/exportarAXls" title="Descargar Reporte en Excel" target="_blank" ><img src="{{STATIC_URL}}images/microsoft-excel.png"></a>
+
+   </div>
+
+ {% endblock %}
+
+{%block contenido %}
+<style type="text/css">
+            .container{
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            #barraProgreso{
+                margin-top:0px;
+            }
+            #exportacion {
+                margin-left: 74%;
+            }
+
+    </style>
+
+<!--<loldiv id="listaParaGrafico" data="{{listaParaGrafico|safe }}"/>-->
+
+<div id="barraProgreso">
+    <label id="result">Enviando... </label>
+
+    <div id="progressbar"></div>
+</div>
+
+<main id="centroGrid">
+    {% if mensaje == 'El Informe se ha guardado correctamente' %}
+        <div id="MensajeGuardado">{{mensaje}}</div>
+    {% else %}
+        <div id="MensajeNoGuardado">{{mensaje}}</div>
+    {% endif %}
+
+    <h3>Ventas Netas Anuales de Publicidad de {{provincia}}</h3>
+
+<div align="center">
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+</div>
+</main>
+
+<script type="text/javascript">
+  //$(document).ready(function(){
+
+    $("#list").jqGrid({
+    url:'/json_ventasNetasAnuales',
+    datatype: 'json',
+    mtype: 'GET',
+    colNames:
+
+    ['Año', 'Mes','DirectasCms','DirectasNetoSinIva','CapitalCms','CapitalNetoSinIva','InteriorCms','InteriorNetoSinIva',
+                                'VenturaCms','VenturaNetoSinIva','OficialesCms','OficialesNetoSinIva','CanjesCms','CanjesNetoSinIva','ContadoCms',
+                                'ContadoNetoSinIva','TotalCms','TotalNetoSinIva'],
+
+    colModel :[
+
+      {name:'anio',index:'anio', width:40},
+
+      {name:'mes',index:'mes', width:55, editable:true/*, summaryTpl : '({0}) total',
+       formatter:currencyFmatter*/},
+
+      {name:'directas_cms',index:'directas_cms', width:50, align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum'},
+      {name:'directas_neto_sin_iva',index:'directas_neto_sin_iva', width:100,align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum'},
+      {name:'capital_cms',index:'capital_cms',align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:50},
+      {name:'capital_neto_sin_iva',index:'capital_neto_sin_iva',align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'interior_cms',index:'interior_cms', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'interior_neto_sin_iva',index:'interior_neto_sin_iva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'ventura_cms',index:'ventura_cms', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'ventura_neto_sin_iva', index:'ventura_neto_sin_iva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'oficiales_cms',index:'oficiales_cms', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'oficiales_neto_sin_iva',index:'oficiales_neto_sin_iva', align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:75},
+      {name:'canjes_cms',index:'canjes_cms', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'canjes_neto_sin_iva',index:'canjes_neto_sin_iva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'contado_cms',index:'contado_cms', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'contado_neto_sin_iva',index:'contado_neto_sin_iva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'total_cms',index:'total_cms', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75,
+        cellattr: function (rowId, tv, rawObject, cm, rdata) {
+
+            return 'style="background-color:#d9def2;"'; //
+        }
+
+      },
+      {name:'total_neto_sin_iva',index:'total_neto_sin_iva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75,
+        cellattr: function (rowId, tv, rawObject, cm, rdata) {
+
+            return 'style="background-color:#daf2d9;"'; //
+        }
+
+      }
+      //{name:'usuario',index:'usuario', align:"right", width:50},
+     // {name:'fechaGuardado',index:'fechaGuardado', align:"right",  formatter:'date', datefmt:'d/m/Y H:i:s', width:75}
+
+    ],
+    rowNum:-1,
+    height: 'auto',
+    pager: $('#gridpager'),
+   // width: 'auto',
+    //sortname: 'field1',
+    sortorder: 'desc',
+    viewrecords: true,
+    grouping: true,
+        groupingView :  {
+        groupField : ['anio'],
+        groupColumnShow : [true],
+        groupText : ['<b>{0}</b>'],
+        groupCollapse : true,
+        groupOrder: ['asc'],
+        groupSummary : [true],
+        showSummaryOnHide: true,
+        groupDataSorted : true },
+     footerrow: true,
+     userDataOnFooter: true,
+     loadComplete: function() {
+        $("td #list_total_neto_sin_iva").css("background", "#E0E0E0");
+     },
+     caption: 'Total Ventas de Publicidad'
+
+  });
+
+//});
+
+function currencyFmatter (cellvalue, options, rowObject)
+{
+   if (cellvalue == 3) {
+        return 'Interior';
+   }
+   if (cellvalue == 4) {
+        return 'Capital';
+   }
+   if (cellvalue == 5) {
+        return 'Ventura';
+   }
+   if (cellvalue == 6) {
+        return 'Oficiales';
+   }
+   if (cellvalue == 7) {
+        return 'Canjes';
+   }
+   if (cellvalue == 9) {
+        return 'Directas';
+   }
+   if (cellvalue == 10) {
+        return 'Directas';
+   }
+   if (cellvalue == 99) {
+        return 'Contado';
+   }
+}
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+
+
+$(document).ready(function(){
+
+			$("#sendEmail").click(function(){
+
+				$(".shadow").slideDown();
+				$("#enviarCorreo").fadeIn();
+			});
+
+			$(".shadow").click(function(){
+				$(".shadow").slideUp();
+				$("#enviarCorreo").fadeOut();
+			});
+
+        $("#button").click(function() {
+
+            band = false; band1 = false;
+
+            if ($('#asunto').val() === '') {
+                $('#eAsunto').show('slow');
+
+            }else{
+                $('#eAsunto').hide();
+                band = true;
+            }
+            if ($('#destinatario0').val() === '') {
+                $('#eDestinatario').show('slow');
+                console.log('no completa destinatario');
+            }else{
+                $('#eDestinatario').hide();
+                 band1 = true;
+            }
+
+
+            if (band && band1 && band2){
+                var asunto = $("#asunto").val();
+
+                var destinatario0 = $('#destinatario0').val();
+                var destinatario1 = ''; var destinatario2 = ''; var destinatario3 = '';var destinatario4 = '';var destinatario5 = '';
+                var destinatario6 = '';var destinatario7 = ''; var destinatario8 = ''; var destinatario9 = ''; var destinatario10 = '';
+
+                if ($('#destinatario2').val() && !$('#mailFalse2').is(':visible')){
+                    destinatario2 = $('#destinatario2').val();
+                }
+                if ($('#destinatario1').val() && !$('#mailFalse1').is(':visible')){
+                    destinatario1 = $('#destinatario1').val();
+                }
+                if ($('#destinatario3').val() && !$('#mailFalse3').is(':visible')){
+                    destinatario3 = $('#destinatario3').val();
+                }
+                if ($('#destinatario4').val() && !$('#mailFalse4').is(':visible')){
+                    destinatario4 = $('#destinatario4').val();
+                }
+                if ($('#destinatario5').val() && !$('#mailFalse5').is(':visible')){
+                    destinatario5 = $('#destinatario5').val();
+                }
+                if ($('#destinatario6').val() && !$('#mailFalse6').is(':visible')){
+                    destinatario6 = $('#destinatario6').val();
+                }
+                if ($('#destinatario7').val() && !$('#mailFalse7').is(':visible')){
+                    destinatario7 = $('#destinatario7').val();
+                }
+                if ($('#destinatario8').val() && !$('#mailFalse8').is(':visible')){
+                    destinatario8 = $('#destinatario8').val();
+                }
+                if ($('#destinatario9').val() && !$('#mailFalse9').is(':visible')){
+                    destinatario9 = $('#destinatario9').val();
+                }
+                if ($('#destinatario10').val() && !$('#mailFalse10').is(':visible')){
+                    destinatario10 = $('#destinatario10').val();
+                }
+
+
+                var mailText = $('#mailText').val();
+
+                $(".shadow").slideUp();
+                $("#enviarCorreo").fadeOut();
+                $.ajax({
+                    url : "/enviarCorreoAjax",
+                    type : "POST",
+                    dataType: "json",
+                    data : {
+                        asunto : asunto,
+                        destinatario0 : destinatario0,
+                        destinatario1 : destinatario1,
+                        destinatario2 : destinatario2,
+                        destinatario3 : destinatario3,
+                        destinatario4 : destinatario4,
+                        destinatario5 : destinatario5,
+                        destinatario6 : destinatario6,
+                        destinatario7 : destinatario7,
+                        destinatario8 : destinatario8,
+                        destinatario9 : destinatario9,
+                        destinatario10 : destinatario10,
+                        mailText : mailText,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success : function(json) {
+                            $('#barraProgreso').hide();
+
+                            alert('Se ha enviado correctamente el correo' );
+
+
+
+                            //$('#result').append( 'Respuesta del Servidor: ' + json.asunto + json.destinatario + json.mailText );
+                        },
+                        beforeSend: function(){
+
+                              progreso();
+                              $('#result').text( 'Enviando correo, espere un momento... ');
+                        },
+                        error : function(xhr,errmsg,err) {
+                            $('#barraProgreso').hide();
+                            //$('#result').text( '');
+                            //alert(xhr.status + ": " + xhr.responseText); //debug = True
+                            alert('Lo sentimos, ha sucedido un error al enviar el correo');//debug = False
+                        }
+                });
+            }
+            return false;
+        });
+
+
+    band2 = false;
+
+    //$('#destinatario').focusout(function(){
+    //        if(!IsEmail($('#destinatario').val())) {
+    //            $('#mailFalse').show('slow');
+
+    //        }else{
+    //            $('#mailFalse').hide();
+    //            band2 = true;
+    //        }
+
+
+
+    });
+
+    function IsEmail(email) {
+      if (email == ''){
+        return true;
+      }
+      var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+      return regex.test(email);
+    }
+
+
+
+
+
+//});
+
+var count = 1;
+function addRow() {
+        console.log(count);
+        var nombre = '#correo'+count;
+        console.log(nombre);
+        $(nombre).show();
+        count++;
+        if (count==11){
+            $("#addEmail").hide();
+        }
+  }
+
+function verificarCorreo(correo){
+
+        var texto = $('#'+correo).val();
+        var num = correo;
+        num = num.substring(12,13);
+
+
+        var mjeAMostrar = '#mailFalse'+num;
+
+
+        if(!IsEmail(texto)) {
+                $(mjeAMostrar).show('slow');
+                console.log('mal');
+            }else{
+                $(mjeAMostrar).hide();
+                console.log('bien');
+                band2 = true;
+            }
+    }
+
+
+//Grafico de Linea
+function mostrarGrafico(){
+
+    if ($('#containerGrafico').is(':visible')){
+        $('#containerGrafico').hide('slow');
+         $('#botonanios').hide();
+    }else{
+        $('#containerGrafico').show('slow');
+         $('#botonanios').show();
+
+    }
+}
+
+$(function () {
+
+    //var listaParaGrafico = $("#listaParaGrafico").attr("data");
+    var valoresEje = [null,null,null,null,null,null,null,null,null,null,null,null];
+    var data = {{listaParaGrafico |safe }}
+    anios=[];
+    for (i = 0; i < data.length; i++) {
+        anios[i] = data[i].anio;
+    }
+    var maximoAnio = Math.max.apply(Math, anios); // Para obtener el maximo año cargado en los datos
+
+    for (i = 0; i < data.length; i++) {
+       //Esto permite el dinamismo al momento de mostrar el grafico.
+        if (data[i].anio == maximoAnio) {
+
+            switch (data[i].mes) {
+                case 1:
+                    valoresEje[0] = data[i].TotalCms;
+                    break;
+                case 2:
+                    valoresEje[1] = data[i].TotalCms;
+                    break;
+                case 3:
+                    valoresEje[2] = data[i].TotalCms;
+                    break;
+                case 4:
+                    valoresEje[3] = data[i].TotalCms;
+                    break;
+                case 5:
+                    valoresEje[4] = data[i].TotalCms;
+                    break;
+                case 6:
+                    valoresEje[5] = data[i].TotalCms;
+                    break;
+                case 7:
+                    valoresEje[6] = data[i].TotalCms;
+                    break;
+                case 8:
+                    valoresEje[7] = data[i].TotalCms;
+                    break;
+                case 9:
+                    valoresEje[8] = data[i].TotalCms;
+                    break;
+                case 10:
+                    valoresEje[9] = data[i].TotalCms;
+                    break;
+                case 11:
+                    valoresEje[10] = data[i].TotalCms;
+                    break;
+                case 12:
+                    valoresEje[11] = data[i].TotalCms;
+                    break;
+            }
+         }
+    }
+    var is_chrome = /chrome/i.test( navigator.userAgent );
+    if (is_chrome) {
+        bandera = false;
+    }else{
+        bandera = true;
+    }
+    //console.log(bandera);
+     var highchartsOptions = Highcharts.setOptions({
+        lang: {
+            loading: 'Aguarde...',
+            exportButtonTitle: "Exportar",
+            printButtonTitle: "Imprimir",
+            rangeSelectorFrom: "De",
+            rangeSelectorTo: "Hasta",
+            rangeSelectorZoom: "Periodo",
+            printChart: 'Imprimir Grafico',
+            downloadPNG: 'Descargar imagen en PNG',
+            downloadJPEG: 'Descargar imagen en JPEG',
+            downloadPDF: 'Descargar imagen en PDF',
+            downloadSVG: 'Descargar imagen en SVG'
+
+        }
+    });
+
+
+
+    $('#containerGrafico').highcharts({
+            chart: {
+                type: 'line'
+            },
+            title: {
+                text: 'Ventas Netas Anuales de Publicidad'
+            },
+            subtitle: {
+                text: 'Evolución en centímetros'
+            },
+            xAxis: {
+                categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dec']
+            },
+            yAxis: {
+                title: {
+                    text: 'Centímetros '
+                },
+                labels: {
+                    format: '{value:,.0f}'
+                }
+            },
+            plotOptions: {
+                line: {
+                    dataLabels: {
+                        enabled: true
+                    },
+                    enableMouseTracking: false
+                }
+            },
+
+
+            series: [{
+                name: maximoAnio,
+                data: valoresEje
+            }],
+            exporting: {
+                enabled: bandera
+            },
+            credits: {
+               enabled: false
+            },
+    });
+
+
+
+    $('#botonanios').click(function () {
+        var chart = $('#containerGrafico').highcharts();
+
+        if (chart.series.length < 3) {
+            var valoresEje = [null,null,null,null,null,null,null,null,null,null,null,null];
+            maximoAnio = maximoAnio - 1;
+            //console.log(maximoAnio);
+            for (i = 0; i < data.length; i++) {
+
+                if (data[i].anio == (maximoAnio) ) {
+
+                    switch (data[i].mes) {
+                        case 1:
+                            valoresEje[0] = data[i].TotalCms;
+                            break;
+                        case 2:
+                            valoresEje[1] = data[i].TotalCms;
+                            break;
+                        case 3:
+                            valoresEje[2] = data[i].TotalCms;
+                            break;
+                        case 4:
+                            valoresEje[3] = data[i].TotalCms;
+                            break;
+                        case 5:
+                            valoresEje[4] = data[i].TotalCms;
+                            break;
+                        case 6:
+                            valoresEje[5] = data[i].TotalCms;
+                            break;
+                        case 7:
+                            valoresEje[6] = data[i].TotalCms;
+                            break;
+                        case 8:
+                            valoresEje[7] = data[i].TotalCms;
+                            break;
+                        case 9:
+                            valoresEje[8] = data[i].TotalCms;
+                            break;
+                        case 10:
+                            valoresEje[9] = data[i].TotalCms;
+                            break;
+                        case 11:
+                            valoresEje[10] = data[i].TotalCms;
+                            break;
+                        case 12:
+                            valoresEje[11] = data[i].TotalCms;
+                            break;
+                    }
+                 }
+            }
+
+            chart.addSeries({
+                name: maximoAnio,
+                data: valoresEje
+            });
+        }
+        if (chart.series.length == 3) {
+            $(this).hide();
+        }
+
+    });
+});
+
+function borrarCorreo(row){
+    var filaAEliminar = '#correo'+row;
+
+    $(filaAEliminar).remove();
+}
+</script>
+
+        {% block grafico %}
+
+
+            <script src="{{STATIC_URL}}js/highcharts.js"></script>
+            <!--<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>-->
+            <script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+              <center>
+                    <div id="containerGrafico" style="display:none;margin-top:35px; width: 70%; height: 65%; "></div>
+                    <button id="botonanios" style="display:none;" class="autocompare">Agregar año anterior</button>
+            </center>
+        {% endblock %}
+
+
+
+ <div id="navegacion">
+
+        <a href="/formVentaNetaAnual/">Volver</a>
+
+
+    </div>
+
+<div class="shadow"></div>
+
+  <div id="enviarCorreo" class="enviarCorreo">
+      <img class="x" src="{{STATIC_URL}}images/Letter-X-black-icon.png">
+		<h3>Enviar PDF por Correo</h3>
+        <form method="post" id="formEmail">
+            {% csrf_token %}
+            <TABLE BORDER="0" id="datosCorreo">
+
+                <TR>
+                   <TD><label>Asunto: </label></TD>
+                   <TD><input type="text" id="asunto"  placeholder="Ingrese asunto del correo"  name="asunto"/></TD>
+                   <TD><label id="eAsunto" class="errorFecha">Debe completar Asunto </label></TD>
+                </TR>
+                <TR>
+                   <TD><label>Destinatario/s: </label></TD>
+                   <TD><input type="text" id="destinatario0" placeholder="Ingrese correo destinatario" name="destinatario" onblur="verificarCorreo(this.id)"/></TD>
+
+                    <TD><label id="mailFalse0" class="errorFecha">El correo no es v&aacute;lido </label>
+
+                    <label id="eDestinatario" class="errorFecha">Debe completar correo destinatario </label></TD>
+
+                </TR>
+                <TR id="correo1" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario1" placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(1)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                     <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse1" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo2" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario2" placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(2)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse2" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+                </TR>
+                <TR id="correo3" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario3"  placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(3)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse3" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo4" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario4"  placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(4)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse4" class="errorFecha">El correo no es valido </label></TD>
+
+                </TR>
+                <TR id="correo5" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario5" placeholder="Ingrese otro correo destinatario"  onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(5)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse5" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo6" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario6" placeholder="Ingrese otro correo destinatario"  onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(6)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD><label id="mailFalse6" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo7" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario7" placeholder="Ingrese otro correo destinatario"  onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(7)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse7" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo8" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario8" placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(8)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD><label id="mailFalse8" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo9" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                        <input type="text" id="destinatario9" placeholder="Ingrese otro correo destinatario"  onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(9)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse9" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR id="correo10" style="display:none;">
+                    <TD>
+                    </TD>
+                    <TD>
+                       <input type="text" id="destinatario10" placeholder="Ingrese otro correo destinatario" onblur="verificarCorreo(this.id)"/><img class="xEmail" onclick="borrarCorreo(10)" src="{{STATIC_URL}}images/deletEmail.png">
+                    </TD>
+                    <TD style="display:none;"></TD>
+                    <TD><label id="mailFalse10" class="errorFecha">El correo no es v&aacute;lido </label></TD>
+
+                </TR>
+                <TR>
+                    <TD>
+                    </TD>
+                    <TD>
+                        <a href="javascript:void(0)" id="addEmail" onclick="addRow()"> Agregar otro correo: </a>
+                    </TD>
+
+                </TR>
+                <TR>
+                   <TD><label>Texto del Correo: </label></TD>
+                   <TD><textarea type="text" id="mailText" placeholder="Ingrese texto del correo a enviar..." name="mailText"></textarea></TD>
+
+                </TR>
+            </TABLE>
+
+
+        </form>
+        <center><input id="button" type="submit" class="btn btn-center" value="Enviar"></center>
+	</div>
+
+{% endblock %}
+

@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+
+
+
+{%block contenido  %}
+
+        <!--<a href="javascript:window.print()" class="boton">Click para sacar reporte</a>-->
+
+
+
+    <style type="text/css">
+            .container{
+                margin-left:10px;
+            }
+
+        </style>
+{% block exportacion %}
+
+   <div id="exportacion">
+        <ul class="nav nav-justified">
+           <li><a href="javascript:void(0)" onclick="printPage()"><span><em>Imprimir Reporte</em></span></a></li>
+
+           <li><a href="/exportarAPdf" target="_blank"><span><em>Exportar a Pdf</em></span></a></li>
+
+           <li><a href="/exportarAXls" target="_blank" ><span><em>Exportar a Excel</em></span></a></li>
+        </ul>
+   </div>
+
+ {% endblock %}
+
+
+
+
+
+    <!--<table class="table table-bordered table-striped table-hover">-->
+        <!--<thead><tr>-->
+
+            <!--<th>Agencia Cliente</th>-->
+            <!--<th>C&oacute;digo</th>-->
+            <!--<th>Aviso</th>-->
+            <!--<th>Centimetros</th>-->
+            <!--<th>Valor de Anuncio</th>-->
+            <!--<th>Recargo de Color</th>-->
+            <!--<th>Recargo de Logo</th>-->
+            <!--<th>Descuento Promocion</th>-->
+            <!--<th>Descuento Convenio</th>-->
+            <!--<th>Descuento Agencia</th>-->
+            <!--<th>Descuento a mano</th>-->
+            <!--<th>Fecha de Factura </th>-->
+            <!--<th>Numero Factura</th>-->
+            <!--<th>Numero Pedido</th>-->
+            <!--<th>Codigo Aviso</th>-->
+            <!--<th>Orden Publicidad</th>-->
+            <!--<th>Valor sin impuestos</th>-->
+            <!--<th>Condicion Impuesto</th>-->
+            <!--<th>Valor a Pagar</th>-->
+            <!--<th>SupSach</th>-->
+            <!--<th>CMS_Puro</th>-->
+            <!--<th>Nombre</th>-->
+        <!--</tr>-->
+        <!--</thead>-->
+        <!--&lt;!&ndash; <tfoot><tr><td colspan="4"><div id="paging"><ul><li><a href="#"><span>Previous</span></a></li><li><a href="#" class="active"><span>1</span></a></li><li><a href="#"><span>2</span></a></li><li><a href="#"><span>3</span></a></li><li><a href="#"><span>4</span></a></li><li><a href="#"><span>5</span></a></li><li><a href="#"><span>Next</span></a></li></ul></div></tr></tfoot>&ndash;&gt;-->
+        <!--<tbody>-->
+        <!--{% for elemento in lista %}-->
+        <!--<tr class="table table-striped">-->
+            <!--<tr class="alt">-->
+            <!--<td title='{{elemento.AgenciaCliente}}'>{{elemento.AgenciaCliente|truncatechars:14 }}</td>-->
+            <!--<td>{{elemento.Codigo}}</td>-->
+            <!--<td title='{{elemento.Aviso}}'>{{elemento.Aviso|truncatechars:14 }}</td>-->
+            <!--<td style= "padding 2px" align="right">{{elemento.cms_puro}}</td>-->
+
+            <!--<td style= "padding 2px" align="right">-->
+
+                <!--{% if elemento.RecargoColor == 0 %}-->
+                    <!------>
+                <!--{% else %}-->
+                    <!--{{elemento.ValorAnuncio}}-->
+                <!--{% endif %}-->
+            <!--</td>-->
+
+            <!--<td style= "padding 2px" align="right">-->
+
+                <!--{% if elemento.RecargoColor == 0 %}-->
+                    <!------>
+                <!--{% else %}-->
+                    <!--{{elemento.RecargoColor}}-->
+                <!--{% endif %}-->
+
+            <!--</td>-->
+             <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.RecargoLogo == 0 %}-->
+                        <!------>
+                    <!--{% else %}-->
+                        <!--{{elemento.RecargoLogo}}-->
+                    <!--{% endif %}-->
+             <!--</td>-->
+            <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.DescPromocion == 0 %}-->
+                        <!------>
+                    <!--{% else %}-->
+                        <!--{{elemento.DescPromocion}}-->
+                    <!--{% endif %}-->
+            <!--</td>-->
+            <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.DescConvenio == 0 %}-->
+                        <!------>
+                    <!--{% else %}-->
+                        <!--{{elemento.DescConvenio}}-->
+                    <!--{% endif %}-->
+            <!--</td>-->
+            <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.DescAgencia == 0 %}-->
+                        <!------>
+                    <!--{% else %}-->
+                        <!--{{elemento.DescAgencia}}-->
+                    <!--{% endif %}-->
+            <!--</td>-->
+            <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.DescuentoAMano == 0 %}-->
+                        <!------>
+                    <!--{% else %}-->
+                        <!--{{elemento.DescuentoAMano}}-->
+                    <!--{% endif %}-->
+             <!--</td>-->
+            <!--<td>{{elemento.fechafactura}}</td>-->
+            <!--<td>{{elemento.nrofactura}}</td>-->
+            <!--<td>{{elemento.nropedido}}</td>-->
+            <!--<td>{{elemento.CodigoAviso}}</td>-->
+             <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.OrdenPublicidad == 0 %}-->
+                        <!------>
+                    <!--{% else %}-->
+                        <!--{{elemento.OrdenPublicidad}}-->
+                    <!--{% endif %}-->
+              <!--</td>-->
+            <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.ValorSinImpuestos == 0 %}-->
+                        <!------>
+                    <!--{% else %}-->
+                        <!--{{elemento.ValorSinImpuestos}}-->
+                    <!--{% endif %}-->
+            <!--</td>-->
+            <!--<td style= "padding 2px" align="right">{{elemento.CondImpuesto}}</td>-->
+
+             <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.valorapagar == 0 %}-->
+                        <!------>
+                     <!--{% else %}-->
+                        <!--{{elemento.valorapagar}}-->
+                    <!--{% endif %}-->
+             <!--</td>-->
+            <!--<td style= "padding 2px" align="right">{{elemento.SupSaCh}}</td>-->
+
+             <!--<td style= "padding 2px" align="right">-->
+
+                    <!--{% if elemento.cms_puro == 0 %}-->
+                        <!------>
+                     <!--{% else %}-->
+                        <!--{{elemento.cms_puro}}-->
+                    <!--{% endif %}-->
+
+             <!--</td>-->
+
+            <!--<td>{{elemento.nombre}}</td>-->
+
+        <!--</tr>-->
+
+        <!--{% endfor %}-->
+
+        <!--</tbody>-->
+    <!--</table>-->
+  <h3>Cuenta Corriente en Bruto</h3>
+<input type="text" id="formadepago" style="display:none" value={{formaPago}} />
+    <table id="list"></table>
+    <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+    <!--<div id="gridpager"></div>-->
+<script type="text/javascript">
+  //$(document).ready(function(){
+    jQuery("#list").jqGrid({
+    url:'/verCCB',
+    datatype: 'json',
+    mtype: 'GET',
+
+    colNames:['Agencia Cliente','Codigo','Aviso', 'Centimetros', 'Valor de Anuncio', 'Recargo de Color',
+    'Recargo de Logo', 'Descuento Promocion', 'Descuento  Convenio', 'Descuento Agencia', 'Descuento a mano', 'Fecha de Factura',
+    'Nro Factura', 'Nro Pedido', 'Codigo Aviso', 'Orden Publicidad','Valor sin Impuestos','Condicion Impuesto', 'Valor a Pagar',
+    'SupSach', 'CMS_Puro', 'Nombre'],
+
+    colModel :[
+      {name:'AgenciaCliente',index:'AgenciaCliente', width:100},
+      {name:'Codigo',index:'Codigo',align:'right',formatter:'char', width:50},
+      {name:'Aviso',index:'Aviso', width:100},
+      {name:'centimetros',index:'centimetros',sorttype:'number',align:'right',formatter:currencyFmatter2,summaryType:'sum', width:50},
+      {name:'ValorAnuncio',index:'ValorAnuncio',align:'right', width:75, sorttype:'number',formatter:'number',summaryType:'sum'},
+      {name:'RecargoColor',index:'RecargoColor',align:'right',  width:75, sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'RecargoLogo',index:'RecargoLogo', align:'right',width:75 , sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'DescPromocion',index:'DescPromocion',align:'right', width:75, sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'DescConvenio',index:'DescConvenio',align:'right', width:75, sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'DescAgencia',index:'DescAgencia',align:'right', width:75, sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'DescuentoAMano',index:'DescuentoAMano',align:'right', width:75, sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'fechafactura',index:'fechafactura', align:'right',width:75, formatter:'date', formatoptions: { srcformat: 'd/m/Y'}},
+      {name:'nrofactura',index:'nrofactura',align:'right', width:75},
+      {name:'nropedido',index:'nropedido',align:'right', width:75},
+      {name:'CodigoAviso',index:'CodigoAviso',align:'right', width:75},
+      {name:'OrdenPublicidad',index:'OrdenPublicidad',align:'right', width:75},
+      {name:'ValorSinImpuestos',index:'ValorSinImpuestos',align:'right',width:75, sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'CondImpuesto',index:'CondImpuesto',align:'right', width:75},
+      {name:'valorapagar',index:'valorapagar',align:'right', width:75, sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'SupSaCh',index:'SupSaCh',align:'right', width:75},
+      {name:'cms_puro',index:'cms_puro',align:'right', width:75, sorttype:'number',formatter:currencyFmatter2,summaryType:'sum'},
+      {name:'nombre',index:'nombre', width:100},
+    ],
+
+    //pager: $('#gridpager'),
+    rowNum:-1,
+    rownumbers: true,
+    //rowList:[20,40,60],
+    //rowTotal: 900000,
+    height: 'auto',
+
+    //width: 'auto',
+    //sortname: 'field1',
+    sortorder: 'desc',
+    viewrecords: true,
+    grouping: true,
+        groupingView :  {
+        groupField : [$('#formadepago').val()],
+        groupColumnShow : [true],
+        groupText : ['<b>{0}</b>'],
+        groupCollapse : true,
+        groupOrder: ['asc'],
+        groupSummary : [true],
+        showSummaryOnHide: true,
+        groupDataSorted : true },
+    footerrow: true,
+    userDataOnFooter: true,
+    //loadOnce: true,
+    caption: 'Cuenta Corriente en Bruto'
+
+  });
+//});
+
+function currencyFmatter (cellvalue, options, rowObject)
+{
+   if (cellvalue == 3) {
+        return 'Interior';
+   }
+   if (cellvalue == 4) {
+        return 'Capital';
+   }
+   if (cellvalue == 5) {
+        return 'Ventura';
+   }
+   if (cellvalue == 6) {
+        return 'Oficiales';
+   }
+   if (cellvalue == 7) {
+        return 'Canjes';
+   }
+   if (cellvalue == 9) {
+        return 'Directas';
+   }
+   if (cellvalue == 10) {
+        return 'Directas';
+   }
+   if (cellvalue == undefined) {
+        return 'Contado';
+   }
+
+}
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return Math.round(cellvalue * 100) / 100;
+   }
+
+}
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+</script>
+
+ {% endblock %}
+

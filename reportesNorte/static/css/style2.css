@@ -1,0 +1,44 @@
+* { padding:0; margin:0; outline: 0;}
+html, body {height:100%;
+
+outline: 0;
+}
+
+ul {
+list-style:none;
+}
+
+.wrapper{
+	height: 100%;
+}
+
+#mensajeError{
+  color: red;
+  margin-top: 30px;
+}
+#id_username{
+  margin-left: 10px;
+}
+h3{
+  text-decoration: underline;
+}
+.table-striped{
+  font-size: 10px;
+}
+
+#page-header{
+  margin-top: 10px;
+}
+#centro h3{
+  text-decoration: underline;
+  text-align: center;
+}
+#centro p{
+  margin-top: 15px;
+}
+
+#centro a:hover { 
+  text-decoration: none;
+  -webkit-box-shadow: 10px 10px 30px 2px rgba(0,0,0,0.75);
+  -moz-box-shadow: 10px 10px 30px 2px rgba(0,0,0,0.75);
+  box-shadow: 10px 10px 30px 2px rgba(0,0,0,0.75); }

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Ingreso de parametros
+{% endblock %}
+
+{% block exportacion %}
+
+{% endblock %}
+
+{%block contenido %}
+
+   <style type="text/css">
+            #centro{
+                min-height: 340px;
+            }
+        </style>
+
+  <main id="centro">
+      <h3>Reportes Estad&iacute;sticos</h3>
+<div id="cuadrilla">
+    <ul class="nav nav-justified">
+        <li><a href="/reportesFormasDePago/" id="reportesFormasDePago" onmouseover="muestra(id)" onmouseout="fuera(id)">Reportes seg&uacute;n Formas de Pago</a></li>
+
+
+        <li><a href="/ventasMensuales" id="reportesMensuales" onmouseover="muestra(id)" onmouseout="fuera(id)">Reportes de Ventas Mensuales</a></li>
+    </ul>
+    <ul class="nav nav-justified">
+
+     <li><a href="/formVentaNetaAnual" id="reportesAnualesPublicidad" onmouseover="muestra(id)" onmouseout="fuera(id)">Ventas Netas Anuales de Publicidad</a></li>
+
+
+    </ul>
+
+</div>
+
+<div class="mensajeReporte"></div>
+
+</main>
+
+
+<div id="navegacion" class="abajo">
+
+
+        <a href="/">Volver</a>
+
+
+
+</div>
+
+
+
+<script type="text/javascript">
+
+    function muestra(e){
+        if (e == 'reportesFormasDePago'){
+            $('.mensajeReporte').html("<p>Reportes discriminando las formas de pago. Podr&aacute; obtener reportes de ventas producidas en Cuenta Corriente o Contado u otras formas de pago (Compensaci&oacute;n, Reposici&oacute;n, Cortesias, Mensual Tarjeta, Migraci&oacute;n, Cuenta Interna y Compensaci&oacute;n Efectivo). </p>");
+
+        }
+        if (e == 'reportesMensuales'){
+            $('.mensajeReporte').html('<p>Podr&aacute; obtener un informe y gr&aacute;fico detallado de las ventas agrupadas por: Contado, Interior, Capital, Ventura, Oficiales, Canjes y Directas; podr&aacute; ver los cent&iacute;metros que fueron vendidos o cedidos por las distintas formas de pago y a su vez ver los Tipos de Avisos en cada forma de pago; y podr&aacute; ver un informe de Recargos y Descuentos. </p>');
+
+        }
+        if (e == 'reportesAnualesPublicidad'){
+            $('.mensajeReporte').html('<p>Resumen de ventas netas anuales discriminadas por Agencia Cliente y Contado, resumidas por año y mes</p>');
+
+        }
+   }
+
+    function fuera(e){
+        if (e == 'reportesFormasDePago'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'reportesMensuales'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'reportesAnualesPublicidad'){
+            $('.mensajeReporte').html('');
+        }
+    }
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+
+
+
+{%block contenido  %}
+        <!--<a href="javascript:window.print()" class="boton">Click para sacar reporte</a>-->
+
+
+
+    <style type="text/css">
+             .container{
+               margin-left: 0px;
+               margin-top: 0px;
+           }
+           .ui-jqgrid .ui-jqgrid-view {
+               font-size: 13px;
+           }
+           .ui-jqgrid .ui-jqgrid-htable th div {
+                height: 20px;
+           }
+
+           .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:16px; !important;}
+
+           #promocionSinResumir .ui-jqgrid-view  {
+              font-size: 14px !important;
+           }
+
+           #promocionSinResumir .ui-jqgrid .ui-jqgrid-htable th div {
+                height: 22px;
+           }
+    </style>
+
+
+<h3>{{tit}} de {{codigoRemoto}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+
+    <main id="centroGrid">
+        <div id='promocionSinResumir' align="center">
+            <table id="list" class="gridTotales"></table>
+                <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+
+
+        </div>
+
+        <div id='grupoAgrupadoPor' style="display:none;" align="center">
+
+            <table id="listXAviso" class="gridTotales"></table>
+        </div>
+            <div id="result" align="center"></div>
+
+    </main>
+<script type="text/javascript">
+
+
+    var titulo = ' {{tit}} ' ;
+  
+
+    $("#list").jqGrid({
+    url:'/json_GrupoPromociones',
+    datatype: 'json',
+    mtype: 'GET',
+    colNames:
+
+    ['Ag. Cliente','Aviso',//'Centimetros','Desc Cms',
+    'Cms Neto','V. Anuncio',//'Rec. Color','Rec. Logo','Desc. Manual', 'Tot. Recargo',
+    'Tot. Bruto',//'Desc. Promocion','Desc. Convenio','Com Agencia','Desc. Agencia',
+     'Total Desc.',
+     'Neto Sin Iva'
+     ],
+    colModel :[
+      {name:'AgenciaCliente',index:'AgenciaCliente', width:300},
+      {name:'Aviso',index:'Aviso', width:300,
+        cellattr: function (rowId, tv, rawObject, cm, rdata){
+            if (rawObject != null){
+                listaauxiliar.push(rawObject);
+                codigoAvisoAuxiliar = rawObject.CodigoAviso;
+                return ' onclick ="mostrarDetalleFila(event,' + '\'' +codigoAvisoAuxiliar + '\'' + ')" title="Click para ver detalles del aviso"  style="color:blue; cursor: pointer;" ';
+            }
+        }
+      },
+      //{name:'centimetros',index:'centimetros',align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:50},
+      //{name:'DescCms',index:'DescCms',align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'CmsNeto',index:'CmsNeto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'ValorAnuncio',index:'ValorAnuncio', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+      //{name:'RecargoColor',index:'RecargoColor', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      //{name:'RecargoLogo', index:'RecargoLogo', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      //{name:'DescManual',index:'DescManual', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      //{name:'TotalRecargo',index:'TotalRecargo', align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:75},
+      {name:'TotalBruto',index:'TotalBruto', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+      //{name:'DescPromocion',index:'DescPromocion', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      //{name:'DescConvenio',index:'DescConvenio', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      //{name:'ComAgencia',index:'ComAgencia', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      //{name:'DescAgencia',index:'DescAgencia', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:75},
+      {name:'TotalDescuento',index:'TotalDescuento', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+      {name:'NetoSinIva',index:'NetoSinIva', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+
+    ],
+    rowNum:-1,
+    height: 'auto',
+    pager: $('#gridpager'),
+   // width: 'auto',
+    //sortname: 'field1',
+    sortorder: 'desc',
+    viewrecords: true,
+    grouping: true,
+        groupingView :  {
+        groupField : ['Aviso'],
+        groupColumnShow : [true],
+        groupText : ['<b>{0}</b>'],
+        groupCollapse : true,
+        groupOrder: ['asc'],
+        groupSummary : [true],
+        showSummaryOnHide: true,
+        groupDataSorted : true },
+     footerrow: true,
+     userDataOnFooter: true,
+     caption: titulo,
+     forceFit: true
+
+  });
+
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+
+
+
+
+</script>
+
+
+
+    {% block navegacion %}
+        <div id="navegacion">
+            <a href="/listaPromociones/">Volver</a>
+
+
+
+
+
+        </div>
+
+    {% endblock %}
+
+        <div class="shadow"></div>
+
+
+
+
+
+
+{% endblock %}

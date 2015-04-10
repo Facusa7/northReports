@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Detalle Cuenta Corriente
+{% endblock %}
+
+{% block exportacion %}
+
+{% endblock %}
+
+
+{%block contenido %}
+ <style type="text/css">
+            .mensajeReporte{
+                margin-top: 1%;
+                padding: 1%;
+            }
+            #centro{
+              min-height: 350px;
+            }
+
+        </style>
+
+
+
+
+
+  <main id="centro">
+      <h3>Se ha producido un error general</h3>
+<div id="cuadrilla">
+    <h5>Por favor intente hacer nuevamente la consulta, si el problema persiste comuniquese con los administradores. Disculpe las molestias.</h5>
+
+    {{mensaje}} <br>
+    {{tipo}}
+
+</div>
+
+
+<div class="mensajeReporte"></div>
+
+
+
+</main>
+
+<div id="navegacion">
+
+
+        <a href="/menuReportesEstadisticos/">Reportes Estad&iacute;sticos</a>
+
+        <a href="/">Men&uacute; Principal</a>
+
+
+
+</div>
+
+
+<script type="text/javascript">
+
+    function muestra(e){
+        if (e == 'cc'){
+            $('.mensajeReporte').html("<p>Obtendr&aacute; un reporte de las ventas producidas en Cta. Corriente agrupadas por tipos de clientes (Interior, Capital, Ventura, Oficiales, Canjes y Directas).</p>");
+
+        }
+        if (e == 'interior'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Interior" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'capital'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Capital" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'oficiales'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Oficiales" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'ventura'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Ventura" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'directas'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Directos" y los registros estan agrupados por Aviso.</p>');
+
+        }
+        if (e == 'canjes'){
+            $('.mensajeReporte').html('<p>Este reporte es un similar a Cta. Corriente con la diferencia de que solo tenemos tipo de clientes de "Canjes" y los registros estan agrupados por Aviso.</p>');
+
+        }
+   }
+
+    function fuera(e){
+        if (e == 'cc'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'interior'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'capital'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'oficiales'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'ventura'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'interior'){
+            $('.mensajeReporte').html('');
+        }
+        if (e == 'canjes'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'directas'){
+            $('.mensajeReporte').html("");
+        }
+
+    }
+</script>
+
+{% endblock %}

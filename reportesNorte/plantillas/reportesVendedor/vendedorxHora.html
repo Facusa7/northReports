@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+
+
+{% block exportacion %}
+
+   <div id="exportacion">
+
+
+       <a href="javascript:void(0)" title="Imprimir Reporte" onclick="printPage()"><img src="{{STATIC_URL}}images/Print-icon.png"></a>
+
+      <!--<a href="/exportarAPdf" title="Ver Reporte en PDF" target="_blank"><img src="{{STATIC_URL}}images/pdf-ico.png"></a>-->
+
+       <a href="/exportarAXls" title="Descargar Reporte en Excel" target="_blank" ><img src="{{STATIC_URL}}images/microsoft-excel.png"></a>
+
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+
+    <style type="text/css">
+            .container{
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 13px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 20px;
+            }
+
+            .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:16px; !important;}
+
+            #promocionSinResumir .ui-jqgrid-view  {
+               font-size: 14px !important;
+            }
+
+            #promocionSinResumir .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 22px;
+            }
+    </style>
+
+
+
+<h3>{{tit}} de {{codigoRemoto}} desde {{fechaDesde}} hasta {{fechaHasta}} </h3>
+
+
+<div class="gruopingContent">
+
+   <ul style="margin-left:0px;">
+        <li style="margin-left: 4%;"><label for="id_agruparPor_0"><input id="id_agruparPor_0" name="agruparPor" type="radio" value="0" checked/>Por Todas las Formas de Pago</label></li>
+
+        <li><label for="id_agruparPor_1"><input id="id_agruparPor_1" name="agruparPor" type="radio" value="1" />Contado/Efectivo</label></li>
+
+        <li><label for="id_agruparPor_2"><input id="id_agruparPor_2" name="agruparPor" type="radio" value="2" />Cuenta Corriente</label></li>
+
+        <li><label for="id_agruparPor_3"><input id="id_agruparPor_3" name="agruparPor" type="radio" value="3" />Cortesias</label></li>
+
+        <li><label for="id_agruparPor_4"><input id="id_agruparPor_4" name="agruparPor" type="radio" value="4" />Reposici&oacute;n</label></li>
+
+        <li><label for="id_agruparPor_5"><input id="id_agruparPor_5" name="agruparPor" type="radio" value="5" />Compensaci&oacute;n</label></li>
+
+   </ul>
+
+</div>
+
+<main id="centroGrid">
+<div id='promocionSinResumir' align="center">
+
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+</div>
+
+
+<div id='reporteAgrupadoPor' style="display:none;" align="center">
+
+    <table id="listXFormasDePago" class="gridTotales"></table>
+</div>
+<div id="result" align="center"></div>
+
+
+</main>
+<script type="text/javascript">
+  //$(document).ready(function(){
+    var agrupacion = $('#agrupacion').val();
+    var tit = $('#tit').val();
+
+
+    $("#list").jqGrid({
+    url:'/jsonTotalVendedorxHora',
+    datatype: 'json',
+    mtype: 'GET',
+    colNames:
+
+    ['Hora', 'Vendedor', 'Cms Neto','Neto Sin Iva'],
+    colModel :[
+      {name:'horaCaptura',index:'horaCaptura', width:100},
+      {name:'NombreVendedor',index:'NombreVendedor', width:230},
+      {name:'cmsNetoxVendedor',index:'cmsNetoxVendedor', align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:100},
+      {name:'netosinivaxVendedor',index:'netosinivaxVendedor', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100}
+
+    ],
+    rowNum:-1,
+    height: 'auto',
+    pager: $('#gridpager'),
+   // width: 'auto',
+    //sortname: 'field1',
+    sortorder: 'desc',
+    viewrecords: true,
+    grouping: true,
+        groupingView :  {
+        groupField : ['horaCaptura'],
+        groupColumnShow : [true],
+        groupText : ['<b>{0}</b>'],
+        groupCollapse : false,
+        groupOrder: ['asc'],
+        groupSummary : [true],
+        showSummaryOnHide: true,
+        groupDataSorted : true },
+     footerrow: true,
+     userDataOnFooter: true,
+     caption: 'Total de Vendedor por Franja Horaria'
+
+  });
+//});
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+$('input:radio[name=agruparPor]').click(function() {
+    // en seleccion almaceno el check que selecciono el usuario.
+    var seleccion = $('input:radio[name=agruparPor]:checked').val();
+    console.log('ahora selecciono '+seleccion);
+
+    //if (seleccion != 0) {
+
+
+        if ($('#promocionSinResumir').is(':visible')){
+            $('#promocionSinResumir').hide();
+        }
+        $.ajax({
+            url : "/reportesVendedor/ajaxVendedorPorHoraFormasDePago/",
+            type : "POST",
+            dataType: "json",
+            data : {
+                seleccion : seleccion,
+
+
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success : function(json) {
+
+                    var seleccion = json.seleccion;
+                    if (seleccion == 0){
+
+                        $('#grafico').hide();
+                        if ($('#reporteAgrupadoPor').is(':visible')){
+                             $('#reporteAgrupadoPor').hide();
+
+                        }
+
+                        $('#promocionSinResumir').show();
+                        $('#result').text('');
+
+
+                    }else{
+
+
+
+
+                            $('#grafico').show();
+
+                            $('#reporteAgrupadoPor').show();
+                            var tipo = json.tipo;
+                            var listaDeListasPorHora = json.listaDeListasPorHora;
+                            var listaDeListas = $.parseJSON(listaDeListasPorHora);
+
+                            var listaHoras = json.listaDeHoras;
+                            var listaDeHoras = $.parseJSON(listaHoras);
+
+                            var listaVend = json.listaDeVendedores;
+                            var listaDeVendedores = $.parseJSON(listaVend);
+
+                            console.log(listaDeListas);
+                            console.log(listaDeVendedores);
+                            console.log(listaDeHoras);
+                            var dataSeries = [];
+
+                            for (var n = 0; n < listaDeVendedores.length ; n++){
+                                var listaDeCmsNeto = [];
+                                var vendedorATratar = listaDeVendedores[n];
+                                for (j = 0 ; j < listaDeListas.length ; j++){
+                                    var listaATratar = listaDeListas[j];
+                                    var band = false;
+                                    for (i = 0; i < listaATratar.length; i++){
+                                         if (listaATratar[i]['nombreVendedor'] == vendedorATratar){
+                                            listaDeCmsNeto.push(listaATratar[i]['CmsNeto']);
+                                            band = true;
+                                         }
+                                    }
+                                    if (band == false){
+                                        listaDeCmsNeto.push(0);
+                                    }
+                                }
+                                dataSeries.push({'name':vendedorATratar, 'data': listaDeCmsNeto});
+
+                            }
+
+
+
+                            // ###############JqGrid de Cuenta Corriente resumido  por Ajax##########
+                                $("#listXFormasDePago").jqGrid({
+                                    url:'/jsonTotalVendedorxHoraAjax/',
+                                    datatype: 'json',
+                                    mtype: 'GET',
+                                    colNames:
+
+                                    ['Hora', 'Vendedor', 'Cms Neto','Neto Sin Iva'],
+                                    colModel :[
+                                      {name:'horaCaptura',index:'horaCaptura', width:100},
+                                      {name:'NombreVendedor',index:'NombreVendedor', width:230},
+                                      {name:'cmsNetoxVendedor',index:'cmsNetoxVendedor', align:"right",sorttype:'number',formatter: currencyFmatter2,summaryType:'sum', width:100},
+                                      {name:'netosinivaxVendedor',index:'netosinivaxVendedor', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100}
+
+                                    ],
+                                    rowNum:-1,
+                                    height: 'auto',
+                                    //pager: $('#gridpager'),
+                                   // width: 'auto',
+                                    //sortname: 'field1',
+                                    sortorder: 'desc',
+                                    viewrecords: true,
+                                    grouping: true,
+                                        groupingView :  {
+                                        groupField : ['horaCaptura'],
+                                        groupColumnShow : [true],
+                                        groupText : ['<b>{0}</b>'],
+                                        groupCollapse : false,
+                                        groupOrder: ['asc'],
+                                        groupSummary : [true],
+                                        showSummaryOnHide: true,
+                                        groupDataSorted : true },
+                                     footerrow: true,
+                                     userDataOnFooter: true,
+                                     caption: 'Total de Vendedor por Franja Horaria de ' + tipo
+                                });
+
+
+                                    $('#grafico').highcharts({
+                                        chart: {
+                                            type: 'column'
+                                        },
+                                        title: {
+                                            text: 'Representación de Centímetros por Cada Vendedor en cada Hora'
+                                        },
+                                        subtitle: {
+                                            text: 'Los % de centimetros de cada hora es la representación relativa de los centímetros vendidos en en ese instante. Cada hora no es comparable con las demas.'
+                                        },
+                                        xAxis: {
+                                            categories: listaDeHoras
+                                        },
+                                        yAxis: {
+                                            min: 0,
+                                            title: {
+                                                text: '% de Centímetros'
+                                            }
+                                        },
+                                        tooltip: {
+                                            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+                                            shared: true
+                                        },
+                                        plotOptions: {
+                                            column: {
+                                                stacking: 'percent'
+                                            }
+                                        },
+                                        credits: {
+                                           enabled: false
+                                        },
+                                        series: dataSeries
+
+                                    });
+
+
+                                    $('#result').text( '');
+                    }//endElse
+
+
+                },
+                beforeSend: function(){
+                    $('#listXFormasDePago').jqGrid('GridUnload'); // Esto es para que recargue el grid con el contenido.
+
+                    $('#result').text( 'Aguarde...');
+
+                },
+                error : function(xhr,errmsg,err) {
+                    //$('#barraProgreso').hide();
+                    $('#result').text( '');
+                    alert(xhr.status + ": " + xhr.responseText); //debug = True
+                    //alert('Lo sentimos, ha sucedido un error para obtener los datos.');//debug = False
+                }
+
+        });
+/*
+    }else {
+        $('#grafico').hide();
+        if ($('#reporteAgrupadoPor').is(':visible')){
+             $('#reporteAgrupadoPor').hide();
+
+        }
+
+        $('#promocionSinResumir').show();
+        $('#result').text('');
+
+    }
+*/
+
+});
+
+</script>
+
+
+{% block grafico %}
+
+
+<script src="{{STATIC_URL}}js/highcharts.js"></script>
+<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
+<script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+  <center>
+
+   <div align="center" style="display:none;margin-top:3%; height:600px;background-color: #fff;" id="grafico"></div>
+</center>
+{% endblock %}
+
+
+    {% block navegacion %}
+        <div id="navegacion">
+
+                <a id ='btnVariable' href="/reportesVendedor/listaVentasPorVendedor">Volver</a>
+
+
+
+        </div>
+
+    {% endblock %}
+
+
+
+
+
+
+{% endblock %}
+
