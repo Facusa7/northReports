@@ -677,7 +677,7 @@ def viewToXls(request):
             sheet.write(1, 3, 'Hora:', estiloDerecho)
             sheet.write(1, 4, datetime.now(), estilo2)
 
-            print data[0].keys()
+            #print data[0].keys()
 
 
 
@@ -4287,7 +4287,7 @@ def formAvisosPublicadosFacturados(request):
             ############### Variables para el Excel ####################
             request.session['data'] = avisosQueSeFacturanYSePublican + avisosQueSeFacturanYNoSePublican
 
-            print request.session['data'][0].keys()
+            #print request.session['data'][0].keys()
 
             request.session['keys'] = ['CodigoAviso', 'FechaAviso', 'FechaPublicacion', 'Nodo', 'Referencia', 'Alto', 'Ancho', 'TotalCm',
                                        'Tarifa',	'ImporteBruto', 'DescuentoaMano', 'Descuentos', 'RecargoColor',	'RecargoLogo',
