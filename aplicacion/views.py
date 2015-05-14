@@ -564,6 +564,13 @@ def viewToXls(request):
     estilo1.num_format_str = 'DD-MMM-YYYY'
     estilo1.alignment = alignment
 
+    estiloFecha = xlwt.XFStyle()
+    estiloFecha.num_format_str = 'DD-MMM-YYYY'
+    estiloFecha.alignment = alignment
+
+    estiloFecha.borders = borders
+
+
     estilo2 = xlwt.XFStyle()
     estilo2.num_format_str = 'HH:MM'
     estilo2.alignment = alignment
@@ -677,10 +684,6 @@ def viewToXls(request):
             sheet.write(1, 3, 'Hora:', estiloDerecho)
             sheet.write(1, 4, datetime.now(), estilo2)
 
-            print data[0].keys()
-
-
-
             marcarFilaConTotales = 0
             for i, row_data in enumerate(data, start=7):  # start from row no.6
                 for j, col in enumerate(keys):
@@ -712,12 +715,12 @@ def viewToXls(request):
                         else:
                             sheet.write(i, j, round(float(e), 2), estiloDer)
                     else:
-                        print col
+
                         if 'fecha' in col or 'Fecha' in col:
-                            print e.date()
-                            e = datetime.strptime(str(e.date()),'%Y-%d-%m')
-                            print e
-                        sheet.write(i, j, e, style)
+
+                            sheet.write(i, j, datetime.strptime(str(e.date()),'%Y-%m-%d'), estiloFecha)
+                        else:
+                            sheet.write(i, j, e, style)
 
         else:
             sheet.col(0).width = 256 * 10
@@ -4226,6 +4229,8 @@ def formAvisosPublicadosFacturados(request):
             df = DateFormat(formulario.cleaned_data['fechaHasta'] + timedelta(days=1))
             fechaHasta = df.format('Y-d-m')
 
+
+            df = DateFormat(formulario.cleaned_data['fechaHasta'])
             fechaHastaModoLatino = df.format('d/m/Y')
 
             request.session['fechaDesde'] = fechaDesdeModoLatino
@@ -4235,17 +4240,16 @@ def formAvisosPublicadosFacturados(request):
 
             listaAux = dictfetchall(cursor)
 
-
             avisosQueSeFacturanYSePublican = []
             avisosQueSeFacturanYNoSePublican = []
             for data in listaAux:
                 importeSinImpuestoPorDia = 0
                 if data['ImporteBruto'] != 0:
-                    porcentXDia = (data['precioxdia']*100) / data['ImporteBruto']
+                    porcentXDia = (data['PrecioXDia2']*100) / data['ImporteBruto']
                     descuentosYRecargosXAviso = data['DescuentoaMano']+data['Descuentos']+data['RecargoColor']+data['RecargoLogo']
                     descuentosYRecargosXDia = (porcentXDia * descuentosYRecargosXAviso)/100
 
-                    importeSinImpuestoPorDia = descuentosYRecargosXDia + data['precioxdia']
+                    importeSinImpuestoPorDia = descuentosYRecargosXDia + data['PrecioXDia2']
 
 
                 data.update({'importeSinImpuestoPorDia':importeSinImpuestoPorDia})
@@ -4287,17 +4291,17 @@ def formAvisosPublicadosFacturados(request):
             ############### Variables para el Excel ####################
             request.session['data'] = avisosQueSeFacturanYSePublican + avisosQueSeFacturanYNoSePublican
 
-            print request.session['data'][0].keys()
+
 
             request.session['keys'] = ['CodigoAviso', 'FechaAviso', 'FechaPublicacion', 'Nodo', 'Referencia', 'Alto', 'Ancho', 'TotalCm',
                                        'Tarifa',	'ImporteBruto', 'DescuentoaMano', 'Descuentos', 'RecargoColor',	'RecargoLogo',
                                        'ImporteSinImpuestos', 'NroPedido', 'TipoComprobante', 'Letra', 'NroFactura', 'CondicionVenta',
-                                       'TotalFacturaSinImpuestos', 'FechaQuePublica', 'PrecioXDia2']
+                                       'TotalFacturaSinImpuestos', 'FechaQuePublica', 'PrecioXDia2','importeSinImpuestoPorDia']
 
             request.session['headers'] = ['Cod Aviso', 'Fecha Aviso', 'Fecha Publicacion', 'Nodo', 'Referencia', 'Alto', 'Ancho', 'Total Cms',
                                        'Tarifa',	'Importe Bruto', 'Descuento a Mano', 'Descuentos', 'Recargo Color',	'Recargo Logo',
                                        'Importe sin Impuestos', 'Nro Pedido', 'Tipo Comprobante', 'Letra', 'Nro Factura', 'Condicion Venta',
-                                       'Total Factura sin Impuestos', 'Fecha que Publica', 'Precio x Dia']
+                                       'Total Factura sin Impuestos', 'Fecha que Publica', 'Precio x Dia', 'Imp Sin Impuesto Por Dia']
 
             listaGrafico = []
             porcAvisosNoPub,porcAvisosPub = 0,0
@@ -4418,9 +4422,17 @@ def formFacturasMensuales(request):
             lista_para_grafico = [{'nombre': 'Publicidad', 'porcentaje':porcentaje_publicidad},
                                   {'nombre': 'No Publicidad', 'porcentaje':porcentaje_no_publicidad}]
             tit = 'Facturas de Publicidad y No Publicidad'
+
+            #########   Variables para Excel    ################################
+            request.session['data']= listaFinal
+
+            request.session['keys'] = ["NroPedido", "NroFactura", "Letra", "NombreCliente", "CondicionVenta", "identificador", "ImporteSinImpuestos", "descripcion", "Comentario", "TipoComprobante"]
+
+            request.session['headers'] = ["Nro Pedido", "Nro Factura", "Letra", "Nombre Cliente", "CondicionVenta", "Identificador", "Importe sin Impuestos", "Descripcion", "Comentario", "Tipo Comprobante"]
+
             request.session['titulo'] = tit
-            request.session['lista_resultados_excel']= listaFinal
-            # request.session['lista_resultados']= lista_resumida
+            #########################################################
+
             lista_resumida = json.dumps(lista_resumida, cls=DjangoJSONEncoder)
             return render_to_response('reportesFacturas/facturasTotales/facturasMensuales.html',{'fechaDesde':fechaDesdeModoLatino, 'tit':tit, 'listaFacturacion':lista_resumida,
                                                                                  'fechaHasta':fechaHastaModoLatino, 'listaGrafico':lista_para_grafico},
