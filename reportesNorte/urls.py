@@ -8,7 +8,7 @@ from aplicacion.views import json_test, json_testA, json_testGrupo, json_totales
     viewFormVentasCaptura, capturaDiayHora, listaDiayHora, jsonTotalVendedorxHora, \
     listaVentasPorVendedor, formVentasVendedor, ventasVendedorPorHora, ajaxVendedorHoraFormasDePago, \
     jsonTotalVendedorxHoraAjax, ventasVendedorPorFormaPago, json_AvisosFacturadosYPublicados, formAvisosPublicadosFacturados, \
-    formFacturasMensuales
+    formFacturasMensuales, formCapturadoresIva
 
 admin.autodiscover()
 
@@ -69,6 +69,9 @@ urlpatterns = patterns('',
         ### reportesFacturas
         url(r'^reportesFacturas/facturasPublicadas/formAvisosPublicadosFacturados/',formAvisosPublicadosFacturados),
         url(r'^reportesFacturas/facturasTotales/formFacturasMensuales/',formFacturasMensuales),
+
+        ## ReportesCapturadoresIva
+        url(r'^capturadoresIva/formFacturasMensuales/',formCapturadoresIva),
 
         #Reportes Excel y PDF
         url(r'^exportarAPdf/', 'aplicacion.views.view_in_pdf', name='templatePdf2'),
