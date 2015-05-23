@@ -138,7 +138,6 @@ function mostrarGrafico(){
 
 $(function () {
 var listaGrafico = {{listaGrafico | safe}};
-
     var data = [];
     for (i=0 ; i < listaGrafico.length; i++){
         if (listaGrafico[i].porc != 0){
@@ -212,8 +211,8 @@ $('#graficoFacturacion').highcharts({
         },
         credits: {
            enabled: false
-        },
-    });
+        }
+});
 
 });
 
