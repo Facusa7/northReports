@@ -34,8 +34,8 @@ PROMOCIONES = (('2 publicaciones = 1 sin cargo', '2 publicaciones = 1 sin cargo'
 
 
 
-REPORTES_CC =((1, 'Cuenta Corriente en Bruto'),
-              (2, 'Cuenta Corriente A'))
+REPORTES_CC =((1, 'Hoy'),
+              (2, 'Otros'))
 
 class DatosEntradaScriptForm(forms.Form):
     fechaDesde = forms.DateField(label='Ingrese la fecha desde:')#,  widget = SelectDateWidget(years=range(2013, 2000, -1)))  #
@@ -83,12 +83,17 @@ class formPromociones(DatosEntradaScriptForm):
     codRemoto = forms.ChoiceField(label='Ingrese codigo remoto:', widget=forms.RadioSelect,
                                   choices=CODIGOS_REMOTOS, required=False)
 
-    # promociones = forms.ChoiceField(label='Promociones:', widget=forms.RadioSelect,
-    #                                         choices=PROMOCIONES)
+
 
 class formVentasCaptura(formPromociones):
-      formaDePago = forms.ChoiceField(label='Ingrese forma de pago:', widget=forms.RadioSelect,
-                                            choices=FORMAS_PAGO, required=False)  #
+    fechaDesde = forms.DateField(label='Ingese la fecha desde:', required=False)
+    fechaHasta = forms.DateField(label='Ingese la fecha hasta:', required=False)
 
-      formaDePagoMas = None
+    formaDePago = forms.ChoiceField(label='Ingrese forma de pago:', widget=forms.RadioSelect,
+                                        choices=FORMAS_PAGO, required=False)  #
+
+    hoy = forms.ChoiceField(widget=CheckboxSelectMultiple ,required=False)
+
+
+    formaDePagoMas = None
 
