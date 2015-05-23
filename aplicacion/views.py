@@ -20,7 +20,7 @@ import itertools
 import xhtml2pdf.pisa as pisa
 
 from django.contrib import auth
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from django.template.loader import get_template
 from django.utils.dateformat import DateFormat
@@ -32,12 +32,13 @@ from aplicacion.forms import DatosEntradaScriptForm, formLogin, formTotalVentaPu
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext, Context
+from aplicacion.models import GruposLoguin
 from reportesNorte import settings
 
 from dateutil import relativedelta as rdelta
 from datetime import datetime
 import reportesNorte
-from reportesNorte.settings import STATIC_URL, MEDIA_URL, MEDIA_ROOT, IMAGEN_EXCEL
+from reportesNorte.settings import STATIC_URL, MEDIA_URL, MEDIA_ROOT, IMAGEN_EXCEL, AUTH_LDAP_USER_SEARCH
 
 
 def inicio(request):
@@ -91,6 +92,7 @@ def inicializarVariables(request):
     request.session['listaVendedorHora'] = 0
     request.session['listaBrutaParaVendedores'] = 0
     request.session['detalleRecargosyDescuentos'] = 0
+
 
 
 def transformacionGenerica(data):
@@ -298,6 +300,23 @@ def someError(request):
     return render_to_response('errorGeneral.html', context_instance=RequestContext(request))
 
 
+
+def grupo_check(user):
+    print(GruposLoguin.objects.all())
+    var = GruposLoguin.objects.all()
+    nombreGrupo = AUTH_LDAP_USER_SEARCH.base_dn
+
+    for grupo in var:
+        if grupo.nombre in nombreGrupo:
+            return True
+
+    return False
+#
+# @user_passes_test(email_check)
+
+
+
+
 def loginView(request):
     message = None
 
@@ -309,15 +328,12 @@ def loginView(request):
             user = authenticate(username=username, password=password)
 
             if user is not None:
+
                 if user.is_active:
                     login(request, user)
                     request.session['userID'] = user.id
                     request.session['nombreUsuario'] = username
                     inicializarVariables(request)
-
-                    # a continuación metodo de contador de visitas
-                    # if user.id != 1 and user.id != 2:
-                    # pprint.pprint(User.objects.get(id=user.id))
 
 
 
@@ -4327,7 +4343,7 @@ def formAvisosPublicadosFacturados(request):
                               context_instance=RequestContext(request))
 
 
-@login_required
+@user_passes_test(grupo_check)
 def formFacturasMensuales(request):
 
     if request.method == 'POST':
@@ -4444,3 +4460,118 @@ def formFacturasMensuales(request):
     return render_to_response('reportesFacturas/facturasTotales/formFacturasMensuales.html', {'formulario': formulario},
                               context_instance=RequestContext(request))
 
+
+def formCapturadoresIva(request):
+    if request.method == 'POST':
+        formulario = formVentasCaptura(request.POST)
+
+        if formulario.is_valid():
+
+            cursor = connections['SDCLASS'].cursor()
+            cursor2 = connections['SDCLASS'].cursor()
+            fechaDesde = formulario.cleaned_data['fechaDesde']
+            df = DateFormat(fechaDesde)
+            fechaDesde = df.format('Y-d-m')
+
+            fechaDesdeModoLatino = df.format('d/m/Y')
+
+            fechaHasta = formulario.cleaned_data['fechaHasta']
+            df = DateFormat(fechaHasta)
+            fechaHasta = df.format('Y-d-m')
+            fechaHastaModoLatino = df.format('d/m/Y')
+
+            df = DateFormat(formulario.cleaned_data['fechaHasta'] + timedelta(days=1))
+            fechaHasta = df.format('Y-d-m')
+            # print fechaHasta
+
+            request.session['fechaDesde'] = fechaDesdeModoLatino
+            request.session['fechaHasta'] = fechaHastaModoLatino
+
+            cursor.execute("select NroAviso,ImporteSinImpuestos,NombreCliente," #FechaFactura,
+                           "TipoComprobante,NroFactura,CondicionVenta,NroPedido,Letra, Comentario" #Comentario esta por las refacturas
+                           " from viewfacturasSDCLASS where FechaFactura between %s and %s",(fechaDesde, fechaHasta))
+
+            listaSDCLASS = dictfetchall(cursor)
+
+            cursor2.execute("select desc1,NroFactura,TipoComprobante,NombreCliente,"#FechaFactura,
+                            "CondicionVenta,Letra,NroPedido,ImporteSinImpuestos, Comentario" #
+                            " from viewfacturasNOSDCLASS where FechaFactura between %s and %s",(fechaDesde, fechaHasta))
+
+            listaNOSDCLASS = dictfetchall(cursor2)
+            #print fechaHasta, fechaDesde, listaNOSDCLASS
+
+            listaAuxiliar = itertools.chain(listaSDCLASS, listaNOSDCLASS)
+            listaFinal, lista_resumida = [], []
+            total_publicidad, nro_aviso_anterior, total_no_publicidad = 0, 0, 0
+
+            for i in listaAuxiliar:
+                if 'NroAviso' in i.keys():
+                    if i['NroAviso'] != nro_aviso_anterior:
+                        nro_aviso_anterior = i['NroAviso']
+                        i['identificador'] = 'Publicidad'
+                        i['descripcion'] = i.pop('NroAviso')
+                        if i['TipoComprobante']=='Nota Credito':
+                            total_publicidad = total_publicidad - i['ImporteSinImpuestos']
+                        else:
+                            total_publicidad = total_publicidad + i['ImporteSinImpuestos']
+                    else:
+
+                        nro_aviso_anterior = i['NroAviso']
+
+                if 'desc1' in i.keys():
+
+                    if (i['NombreCliente'] == u'Fideicomiso Adm.de Pautas Pub.ofic') \
+                       or (i['NombreCliente'] == u'LOTERIA CHAQUENA') \
+                       or (i['NombreCliente'] == u'Ministerio de Justicia de Corrientes') \
+                       or (i['NombreCliente'] == u'Relevamientos Catastrales S.A./Ex-SyK') \
+                       or (i['NombreCliente'] == u'Municip. de Saenz Pena') \
+                       or (i['NombreCliente'] == u'Jef. De Gabinete Minist Sec M.c.'):
+                        i['identificador'] = 'Publicidad'
+                        i['descripcion'] = i.pop('desc1')
+                        if (i['TipoComprobante']=='Nota Credito'):
+                             total_publicidad = total_publicidad - i['ImporteSinImpuestos']
+                        else:
+                             total_publicidad = total_publicidad + i['ImporteSinImpuestos']
+                    else:
+                        i['identificador'] = 'No Publicidad'
+                        i['descripcion'] = i.pop('desc1') #u'desc1'
+
+                        if (i['TipoComprobante']=='Nota Credito'):
+                            total_no_publicidad = total_no_publicidad - i['ImporteSinImpuestos']
+                        else:
+                            total_no_publicidad = total_no_publicidad + i['ImporteSinImpuestos']
+                #print i.keys
+                listaFinal.append(i)
+
+            facturacion_total = total_publicidad + total_no_publicidad
+            porcentaje_publicidad = (total_publicidad/facturacion_total) * 100
+            porcentaje_no_publicidad = (total_no_publicidad/facturacion_total) * 100
+
+            lista_resumida = [{'FuenteIngreso':'Publicidad', 'ImportesinImpuestos': total_publicidad},
+                {'FuenteIngreso':'No Publicidad', 'ImportesinImpuestos': total_no_publicidad},
+                {'FuenteIngreso':' ', 'ImportesinImpuestos': ' '},
+                {'FuenteIngreso':'Total', 'ImportesinImpuestos': facturacion_total}]
+            lista_para_grafico = [{'nombre': 'Publicidad', 'porcentaje':porcentaje_publicidad},
+                                  {'nombre': 'No Publicidad', 'porcentaje':porcentaje_no_publicidad}]
+            tit = 'Facturas de Publicidad y No Publicidad'
+
+            #########   Variables para Excel    ################################
+            request.session['data']= listaFinal
+
+            request.session['keys'] = ["NroPedido", "NroFactura", "Letra", "NombreCliente", "CondicionVenta", "identificador", "ImporteSinImpuestos", "descripcion", "Comentario", "TipoComprobante"]
+
+            request.session['headers'] = ["Nro Pedido", "Nro Factura", "Letra", "Nombre Cliente", "CondicionVenta", "Identificador", "Importe sin Impuestos", "Descripcion", "Comentario", "Tipo Comprobante"]
+
+            request.session['titulo'] = tit
+            #########################################################
+
+            lista_resumida = json.dumps(lista_resumida, cls=DjangoJSONEncoder)
+            return render_to_response('reportesFacturas/facturasTotales/facturasMensuales.html',{'fechaDesde':fechaDesdeModoLatino, 'tit':tit, 'listaFacturacion':lista_resumida,
+                                                                                 'fechaHasta':fechaHastaModoLatino, 'listaGrafico':lista_para_grafico},
+                context_instance=RequestContext(request))
+
+    else:
+        formulario = formVentasCaptura()
+
+    return render_to_response('capturadoresIva/formAvisosConTasaIva.html', {'formulario': formulario},
+                              context_instance=RequestContext(request))
