@@ -311,10 +311,6 @@ def grupo_check(user):
             return True
 
     return False
-#
-# @user_passes_test(email_check)
-
-
 
 
 def loginView(request):

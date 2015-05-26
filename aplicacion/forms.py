@@ -86,14 +86,14 @@ class formPromociones(DatosEntradaScriptForm):
 
 
 class formVentasCaptura(formPromociones):
+
+    hoy = forms.ChoiceField(widget=CheckboxSelectMultiple ,choices=REPORTES_CC)
+
     fechaDesde = forms.DateField(label='Ingese la fecha desde:', required=False)
     fechaHasta = forms.DateField(label='Ingese la fecha hasta:', required=False)
 
     formaDePago = forms.ChoiceField(label='Ingrese forma de pago:', widget=forms.RadioSelect,
                                         choices=FORMAS_PAGO, required=False)  #
-
-    hoy = forms.ChoiceField(widget=CheckboxSelectMultiple ,required=False)
-
 
     formaDePagoMas = None
 
