@@ -87,7 +87,7 @@ class formPromociones(DatosEntradaScriptForm):
 
 class formVentasCaptura(formPromociones):
 
-    hoy = forms.ChoiceField(widget=CheckboxSelectMultiple ,choices=REPORTES_CC)
+    hoy = forms.ChoiceField(widget=forms.RadioSelect ,choices=REPORTES_CC)
 
     fechaDesde = forms.DateField(label='Ingese la fecha desde:', required=False)
     fechaHasta = forms.DateField(label='Ingese la fecha hasta:', required=False)

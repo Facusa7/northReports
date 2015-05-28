@@ -38,7 +38,8 @@ from reportesNorte import settings
 from dateutil import relativedelta as rdelta
 from datetime import datetime
 import reportesNorte
-from reportesNorte.settings import STATIC_URL, MEDIA_URL, MEDIA_ROOT, IMAGEN_EXCEL, AUTH_LDAP_USER_SEARCH
+from reportesNorte.settings import STATIC_URL, MEDIA_URL, MEDIA_ROOT, IMAGEN_EXCEL, AUTH_LDAP_USER_SEARCH, \
+    AUTH_LDAP_GROUP_SEARCH
 
 
 def inicio(request):
@@ -306,6 +307,8 @@ def grupo_check(user):
     var = GruposLoguin.objects.all()
     nombreGrupo = AUTH_LDAP_USER_SEARCH.base_dn
 
+    print nombreGrupo
+
     for grupo in var:
         if grupo.nombre in nombreGrupo:
             return True
@@ -331,8 +334,10 @@ def loginView(request):
                     request.session['nombreUsuario'] = username
                     inicializarVariables(request)
 
-
-
+                    if hasattr(user, 'ldap_user'):
+                        print user.ldap_user.dn
+                    else:
+                        print "No es usuario de Active directory"
 
                     return render_to_response('menuPrincipal.html', context_instance=RequestContext(request))
                 else:
@@ -4339,7 +4344,6 @@ def formAvisosPublicadosFacturados(request):
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(grupo_check)
 def formFacturasMensuales(request):
 
     if request.method == 'POST':
@@ -4456,7 +4460,7 @@ def formFacturasMensuales(request):
     return render_to_response('reportesFacturas/facturasTotales/formFacturasMensuales.html', {'formulario': formulario},
                               context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
 def formCapturadoresIva(request):
     if request.method == 'POST':
         formulario = formVentasCaptura(request.POST)
@@ -4464,7 +4468,7 @@ def formCapturadoresIva(request):
         if formulario.is_valid():
 
             cursor = connections['SDCLASS'].cursor()
-            cursor2 = connections['SDCLASS'].cursor()
+
             fechaDesde = formulario.cleaned_data['fechaDesde']
             df = DateFormat(fechaDesde)
             fechaDesde = df.format('Y-d-m')
@@ -4483,87 +4487,22 @@ def formCapturadoresIva(request):
             request.session['fechaDesde'] = fechaDesdeModoLatino
             request.session['fechaHasta'] = fechaHastaModoLatino
 
-            cursor.execute("select NroAviso,ImporteSinImpuestos,NombreCliente," #FechaFactura,
-                           "TipoComprobante,NroFactura,CondicionVenta,NroPedido,Letra, Comentario" #Comentario esta por las refacturas
-                           " from viewfacturasSDCLASS where FechaFactura between %s and %s",(fechaDesde, fechaHasta))
+            codRemoto = formulario.cleaned_data['codRemoto']
+            if codRemoto == u'1':
+                request.session['codigoRemoto'] = 'Chaco'
+            else:
+                request.session['codigoRemoto'] = 'Corrientes'
 
-            listaSDCLASS = dictfetchall(cursor)
+            cursor.execute("select * from EstadisticasAvisosConTasaIVA(%s,%s,%s)",(fechaDesde, fechaHasta, codRemoto))
+            listaBruta = dictfetchall(cursor)
 
-            cursor2.execute("select desc1,NroFactura,TipoComprobante,NombreCliente,"#FechaFactura,
-                            "CondicionVenta,Letra,NroPedido,ImporteSinImpuestos, Comentario" #
-                            " from viewfacturasNOSDCLASS where FechaFactura between %s and %s",(fechaDesde, fechaHasta))
-
-            listaNOSDCLASS = dictfetchall(cursor2)
-            #print fechaHasta, fechaDesde, listaNOSDCLASS
-
-            listaAuxiliar = itertools.chain(listaSDCLASS, listaNOSDCLASS)
-            listaFinal, lista_resumida = [], []
-            total_publicidad, nro_aviso_anterior, total_no_publicidad = 0, 0, 0
-
-            for i in listaAuxiliar:
-                if 'NroAviso' in i.keys():
-                    if i['NroAviso'] != nro_aviso_anterior:
-                        nro_aviso_anterior = i['NroAviso']
-                        i['identificador'] = 'Publicidad'
-                        i['descripcion'] = i.pop('NroAviso')
-                        if i['TipoComprobante']=='Nota Credito':
-                            total_publicidad = total_publicidad - i['ImporteSinImpuestos']
-                        else:
-                            total_publicidad = total_publicidad + i['ImporteSinImpuestos']
-                    else:
-
-                        nro_aviso_anterior = i['NroAviso']
-
-                if 'desc1' in i.keys():
-
-                    if (i['NombreCliente'] == u'Fideicomiso Adm.de Pautas Pub.ofic') \
-                       or (i['NombreCliente'] == u'LOTERIA CHAQUENA') \
-                       or (i['NombreCliente'] == u'Ministerio de Justicia de Corrientes') \
-                       or (i['NombreCliente'] == u'Relevamientos Catastrales S.A./Ex-SyK') \
-                       or (i['NombreCliente'] == u'Municip. de Saenz Pena') \
-                       or (i['NombreCliente'] == u'Jef. De Gabinete Minist Sec M.c.'):
-                        i['identificador'] = 'Publicidad'
-                        i['descripcion'] = i.pop('desc1')
-                        if (i['TipoComprobante']=='Nota Credito'):
-                             total_publicidad = total_publicidad - i['ImporteSinImpuestos']
-                        else:
-                             total_publicidad = total_publicidad + i['ImporteSinImpuestos']
-                    else:
-                        i['identificador'] = 'No Publicidad'
-                        i['descripcion'] = i.pop('desc1') #u'desc1'
-
-                        if (i['TipoComprobante']=='Nota Credito'):
-                            total_no_publicidad = total_no_publicidad - i['ImporteSinImpuestos']
-                        else:
-                            total_no_publicidad = total_no_publicidad + i['ImporteSinImpuestos']
-                #print i.keys
-                listaFinal.append(i)
-
-            facturacion_total = total_publicidad + total_no_publicidad
-            porcentaje_publicidad = (total_publicidad/facturacion_total) * 100
-            porcentaje_no_publicidad = (total_no_publicidad/facturacion_total) * 100
-
-            lista_resumida = [{'FuenteIngreso':'Publicidad', 'ImportesinImpuestos': total_publicidad},
-                {'FuenteIngreso':'No Publicidad', 'ImportesinImpuestos': total_no_publicidad},
-                {'FuenteIngreso':' ', 'ImportesinImpuestos': ' '},
-                {'FuenteIngreso':'Total', 'ImportesinImpuestos': facturacion_total}]
-            lista_para_grafico = [{'nombre': 'Publicidad', 'porcentaje':porcentaje_publicidad},
-                                  {'nombre': 'No Publicidad', 'porcentaje':porcentaje_no_publicidad}]
-            tit = 'Facturas de Publicidad y No Publicidad'
 
             #########   Variables para Excel    ################################
-            request.session['data']= listaFinal
 
-            request.session['keys'] = ["NroPedido", "NroFactura", "Letra", "NombreCliente", "CondicionVenta", "identificador", "ImporteSinImpuestos", "descripcion", "Comentario", "TipoComprobante"]
-
-            request.session['headers'] = ["Nro Pedido", "Nro Factura", "Letra", "Nombre Cliente", "CondicionVenta", "Identificador", "Importe sin Impuestos", "Descripcion", "Comentario", "Tipo Comprobante"]
-
-            request.session['titulo'] = tit
             #########################################################
 
-            lista_resumida = json.dumps(lista_resumida, cls=DjangoJSONEncoder)
-            return render_to_response('reportesFacturas/facturasTotales/facturasMensuales.html',{'fechaDesde':fechaDesdeModoLatino, 'tit':tit, 'listaFacturacion':lista_resumida,
-                                                                                 'fechaHasta':fechaHastaModoLatino, 'listaGrafico':lista_para_grafico},
+            # lista_resumida = json.dumps(lista_resumida, cls=DjangoJSONEncoder)
+            return render_to_response('reportesFacturas/facturasTotales/facturasMensuales.html',{'fechaDesde':fechaDesdeModoLatino},
                 context_instance=RequestContext(request))
 
     else:

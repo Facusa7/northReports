@@ -158,21 +158,32 @@ $(document).ready(function(){
    {% csrf_token %}
 {#   {{formulario.as_p}}#}
 
-    <p><label for="id_hoy_0">D&iacute;a:</label>
-    <ul id="id_hoy_0">
-        <li><label for="id_hoy_0"><input id="id_hoy_0" name="id_hoy" type="checkbox" value="1" checked="true"/> Hoy</label></li>
-    </ul>
+    <p>
+        <label for="id_hoy_0">D&iacute;a:</label>
+        <ul id="id_hoy">
+
+            <li><label for="id_hoy_0"><input id="id_hoy_0" name="hoy" type="radio" value="1" checked="true"/> Hoy</label></li>
+            <li><label for="id_hoy_1"><input id="id_hoy_1" name="hoy" type="radio" value="2" /> Otros</label></li>
+        </ul>
     </p>
 
+    <p>
+        <label for="id_fechaDesde">Ingese la fecha desde:</label> <input id="id_fechaDesde" name="fechaDesde" type="text" />
+    </p>
 
+    <p>
+        <label for="id_fechaHasta">Ingese la fecha hasta:</label> <input id="id_fechaHasta" name="fechaHasta" type="text" />
+    </p>
 
-     <p><label for="id_fechaDesde">Ingrese la fecha desde:</label> <input id="id_fechaDesde" name="fechaDesde" type="text" /></p>
-    <p><label for="id_fechaHasta">Ingrese la fecha hasta:</label> <input id="id_fechaHasta" name="fechaHasta" type="text" /></p>
+    <p>
+        <label for="id_codRemoto_0">Ingrese codigo remoto:</label>
+        <ul id="id_codRemoto">
+            <li><label for="id_codRemoto_0"><input id="id_codRemoto_0" name="codRemoto" type="radio" value="1" checked="true"/> Chaco</label></li>
+            <li><label for="id_codRemoto_1"><input id="id_codRemoto_1" name="codRemoto" type="radio" value="2" /> Corrientes</label></li>
+        </ul>
+    </p>
 
-
-
-
-   <input type='submit'  value='Consultar' class="btn btn-center"/>
+   <center><input type='submit'  value='Consultar' class="btn btn-center"/></center>
 </form>
     <div id="barraProgreso">
       <label id="cargando" style="display:none;" >Cargando... </label>
