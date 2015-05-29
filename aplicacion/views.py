@@ -302,15 +302,18 @@ def someError(request):
 
 
 
-def grupo_check(user):
-    print(GruposLoguin.objects.all())
+def grupo_check(user, gr = []):
+    #print(GruposLoguin.objects.all())
     var = GruposLoguin.objects.all()
-    nombreGrupo = AUTH_LDAP_USER_SEARCH.base_dn
-
-    print nombreGrupo
+    if hasattr(user, 'ldap_user'):
+        nombreGrupo = user.ldap_user.dn
+    else:
+        return True
 
     for grupo in var:
+
         if grupo.nombre in nombreGrupo:
+            gr.append(grupo.nombre)
             return True
 
     return False
@@ -327,21 +330,34 @@ def loginView(request):
             user = authenticate(username=username, password=password)
 
             if user is not None:
+                grupo = []
+                if hasattr(user, 'ldap_user'):
+                        #  active directory
 
-                if user.is_active:
-                    login(request, user)
-                    request.session['userID'] = user.id
-                    request.session['nombreUsuario'] = username
-                    inicializarVariables(request)
+                    if grupo_check(user, grupo):
+                        if user.is_active:
+                            login(request, user)
+                            request.session['userID'] = user.id
+                            request.session['nombreUsuario'] = username
+                            inicializarVariables(request)
 
-                    if hasattr(user, 'ldap_user'):
-                        print user.ldap_user.dn
+                            return render_to_response('Main.html',{'grupo':grupo}, context_instance=RequestContext(request))
+                        else:
+                            message = "Usuario Inactivo"
                     else:
-                        print "No es usuario de Active directory"
-
-                    return render_to_response('menuPrincipal.html', context_instance=RequestContext(request))
+                        message = "No tiene permisos para acceder"
                 else:
-                    message = "Usuario Inactivo"
+                    #"No es usuario de Active directory"
+
+                    if user.is_active:
+                        login(request, user)
+                        request.session['userID'] = user.id
+                        request.session['nombreUsuario'] = username
+                        inicializarVariables(request)
+
+                        return render_to_response('Main.html', {'grupo':['todo']}, context_instance=RequestContext(request))
+                    else:
+                        message = "Usuario Inactivo"
             else:
                 message = 'Nombre de usuario y/o password incorrecto/s'
     else:
@@ -4467,7 +4483,13 @@ def formCapturadoresIva(request):
 
         if formulario.is_valid():
 
-            cursor = connections['SDCLASS'].cursor()
+            cursor = connections['sqlserver2008'].cursor()
+
+            codRemoto = formulario.cleaned_data['codRemoto']
+            if codRemoto == u'1':
+                request.session['codigoRemoto'] = 'Chaco'
+            else:
+                request.session['codigoRemoto'] = 'Corrientes'
 
             fechaDesde = formulario.cleaned_data['fechaDesde']
             df = DateFormat(fechaDesde)
@@ -4487,17 +4509,29 @@ def formCapturadoresIva(request):
             request.session['fechaDesde'] = fechaDesdeModoLatino
             request.session['fechaHasta'] = fechaHastaModoLatino
 
-            codRemoto = formulario.cleaned_data['codRemoto']
-            if codRemoto == u'1':
-                request.session['codigoRemoto'] = 'Chaco'
-            else:
-                request.session['codigoRemoto'] = 'Corrientes'
-
             cursor.execute("select * from EstadisticasAvisosConTasaIVA(%s,%s,%s)",(fechaDesde, fechaHasta, codRemoto))
             listaBruta = dictfetchall(cursor)
 
+            listaIvaIncorrecto, listaIva = [], []
+            for data in listaBruta:
+                if data['TASAIVA'] == 10.5 or data['TASAIVA'] == 21.0:
+                    listaIva.append(data)
+                else:
+                    listaIvaIncorrecto.append(data)
+            resultado = transformacionGenerica(data)
+
+            tit = 'Control Tasa de IVA de Avisos'
+
+
 
             #########   Variables para Excel    ################################
+            request.session['data']= listaIva + listaIvaIncorrecto
+
+            request.session['keys'] = ["NroPedido", "NroFactura", "Letra", "NombreCliente", "CondicionVenta", "identificador", "ImporteSinImpuestos", "descripcion", "Comentario", "TipoComprobante"]
+
+            request.session['headers'] = ["Nro Pedido", "Nro Factura", "Letra", "Nombre Cliente", "CondicionVenta", "Identificador", "Importe sin Impuestos", "Descripcion", "Comentario", "Tipo Comprobante"]
+
+            request.session['titulo'] = tit
 
             #########################################################
 

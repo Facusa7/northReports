@@ -25,7 +25,9 @@
              h3{
                 margin-top: 0px;
              }
-
+            #centro{
+                width: 60%;
+            }
 
 
         </style>
@@ -33,7 +35,17 @@
 
 
 <script  type="text/javascript">
+function desplegar(a){
+        if (a == 2){
+            $('#rangoFechas').show('slow');
+        }else{
+            $('#rangoFechas').hide('slow');
+        }
+   }
 $(document).ready(function(){
+
+
+
 
     $("#formulario").submit(function() {
 
@@ -158,24 +170,24 @@ $(document).ready(function(){
    {% csrf_token %}
 {#   {{formulario.as_p}}#}
 
-    <p>
+    <p style="margin-top: 2%;">
         <label for="id_hoy_0">D&iacute;a:</label>
         <ul id="id_hoy">
 
-            <li><label for="id_hoy_0"><input id="id_hoy_0" name="hoy" type="radio" value="1" checked="true"/> Hoy</label></li>
-            <li><label for="id_hoy_1"><input id="id_hoy_1" name="hoy" type="radio" value="2" /> Otros</label></li>
+            <li><label for="id_hoy_0"><input id="id_hoy_0" name="hoy" type="radio" value="1" onclick="desplegar(1)" checked="true"/> Hoy</label></li>
+            <li><label for="id_hoy_1"><input id="id_hoy_1" name="hoy" type="radio" value="2" onclick="desplegar(2)"/> Otros</label></li>
         </ul>
     </p>
+    <div style="display:none" id="rangoFechas">
+        <p>
+            <label for="id_fechaDesde">Ingese la fecha desde:</label> <input id="id_fechaDesde" name="fechaDesde" type="text" />
+        </p>
 
-    <p>
-        <label for="id_fechaDesde">Ingese la fecha desde:</label> <input id="id_fechaDesde" name="fechaDesde" type="text" />
-    </p>
-
-    <p>
-        <label for="id_fechaHasta">Ingese la fecha hasta:</label> <input id="id_fechaHasta" name="fechaHasta" type="text" />
-    </p>
-
-    <p>
+        <p>
+            <label for="id_fechaHasta">Ingese la fecha hasta:</label> <input id="id_fechaHasta" name="fechaHasta" type="text" />
+        </p>
+    </div>
+    <p  style="margin-top: 2%;">
         <label for="id_codRemoto_0">Ingrese codigo remoto:</label>
         <ul id="id_codRemoto">
             <li><label for="id_codRemoto_0"><input id="id_codRemoto_0" name="codRemoto" type="radio" value="1" checked="true"/> Chaco</label></li>

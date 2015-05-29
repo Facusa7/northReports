@@ -263,6 +263,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#6ba046', end
   margin-top: -4%;
   font-size: 12px;
 }
+#id_hoy{
+  margin-left: 10%;
+  margin-top: -4%;
+  font-size: 12px;
+}
+}
 #id_formaDePagoMas{
   margin-left: 47%;
   margin-top: -4%;

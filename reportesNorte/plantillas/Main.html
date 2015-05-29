@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title%}
+   Ingreso de parametros
+{% endblock %}
+
+{% block exportacion %}
+
+
+ {% endblock %}
+{%block contenido %}
+
+  <main id="centro">
+      <h2>Bienvendios al sistema del futuro</h2>
+        <h2>{{ grupo.0 }}</h2>
+<div id="cuadrilla">
+    <ul class="nav nav-justified">
+
+        {%   if grupo.0 == 'administracion' or grupo.0 == 'todo' %}
+            <li><a href="/menuPrincipal.html" style="padding:10px 0px" id="reportesEstadisticosNorte" onmouseover="muestra(id)" onmouseout="fuera(id)">Reportes Estad&iacute;sticas Norte</a></li>
+        {% endif %}
+        {% if grupo.0 == 'departamento sistemas' or grupo.0 == 'todo'  %}
+            <li><a  href="/capturadoresIva/formFacturasMensuales/" style="padding:10px 0px" id="controlAvisos" onmouseover="muestra(id)" onmouseout="fuera(id)">Control de Avisos </a></li>
+        {% endif %}
+    </ul>
+</div>
+
+<div class="mensajeReporte">
+
+    <!--<p id="LreportesEstadisticos">-->
+      <!--En este reporte obtendr&aacute; de forma detallada las ventas producidas de un día o m&aacute;ximo un mes cualquiera.-->
+        <!--Tambi&eacute;n se puede tener un informe detallado por cualquier forma de pago, y codigos rem&oacute;to (Chaco y Corrientes).-->
+    <!--</p>-->
+    <!--<p id="Lindicador2">-->
+        <!--Inidcador 2 "Proximamente".-->
+    <!--</p>-->
+
+</div>
+
+</main>
+<script type="text/javascript">
+
+    function muestra(e){
+        if (e == 'reportesEstadisticosNorte'){
+            $('.mensajeReporte').html("<p>Reportes de avisos facturados y vendidos según formas de pago; reportes de promociones; reportes de Vendodores y mucho más.</p>");
+
+        }
+        if (e == 'controlAvisos'){
+            $('.mensajeReporte').html('<p>Control de Avisos, detallando para cada uno su tasa de IVA. </p>');
+
+        }
+
+   }
+
+    function fuera(e){
+        if (e == 'reportesEstadisticosNorte'){
+            $('.mensajeReporte').html("");
+        }
+        if (e == 'controlAvisos'){
+            $('.mensajeReporte').html('');
+        }
+
+    }
+</script>
+
+
+{% endblock %}
+
