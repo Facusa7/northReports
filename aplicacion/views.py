@@ -6,9 +6,9 @@ from collections import defaultdict
 import os
 import json
 from cgi import escape
-
+import time
+import datetime
 from datetime import timedelta
-from datetime import datetime
 import pprint
 from django.contrib.auth import authenticate, login
 
@@ -4491,20 +4491,28 @@ def formCapturadoresIva(request):
             else:
                 request.session['codigoRemoto'] = 'Corrientes'
 
-            fechaDesde = formulario.cleaned_data['fechaDesde']
-            df = DateFormat(fechaDesde)
-            fechaDesde = df.format('Y-d-m')
 
-            fechaDesdeModoLatino = df.format('d/m/Y')
+            dia = formulario.cleaned_data['hoy']
+            if dia == u'1':
+                fechaDesde = time.strftime('%Y-%d-%m')
+                # facu aca hay que obtener el día de hoy y sumarle uno, lo mismo para fechaHasta si ingresa con uiquery.
+                fechaHasta = datetime.date()  + timedelta(days=1)
+                print (fechaHasta.strftime('%Y-%d-%m'))
+            else:
+                fechaDesde = formulario.cleaned_data['fechaDesde']
+                df = DateFormat(fechaDesde)
+                fechaDesde = df.format('Y-d-m')
 
-            fechaHasta = formulario.cleaned_data['fechaHasta']
-            df = DateFormat(fechaHasta)
-            fechaHasta = df.format('Y-d-m')
-            fechaHastaModoLatino = df.format('d/m/Y')
+                fechaDesdeModoLatino = df.format('d/m/Y')
 
-            df = DateFormat(formulario.cleaned_data['fechaHasta'] + timedelta(days=1))
-            fechaHasta = df.format('Y-d-m')
-            # print fechaHasta
+                fechaHasta = formulario.cleaned_data['fechaHasta']
+                df = DateFormat(fechaHasta)
+                fechaHasta = df.format('Y-d-m')
+                fechaHastaModoLatino = df.format('d/m/Y')
+
+                df = DateFormat(formulario.cleaned_data['fechaHasta'] + timedelta(days=1))
+                fechaHasta = df.format('Y-d-m')
+                # print fechaHasta
 
             request.session['fechaDesde'] = fechaDesdeModoLatino
             request.session['fechaHasta'] = fechaHastaModoLatino

@@ -58,7 +58,7 @@ $(document).ready(function(){
 
 
 
-        band = false; band1 = false;
+        band = false; band1 = false; band4=false;
         if ($('#id_fechaDesde').val() === '') {
             $('#fechaDesde').show('slow');
 
@@ -71,16 +71,6 @@ $(document).ready(function(){
         }else{
             $('#fechaHasta').hide();
              band1 = true;
-        }
-
-
-
-
-        if (!$('input:radio[name=codRemoto]:checked').val()) {
-            $('#codRemoto').show('slow');
-        }else{
-            $('#codRemoto').hide();
-            band3 = true;
         }
 
 
@@ -140,9 +130,16 @@ $(document).ready(function(){
                     }
                 }
             }
+        }else {
+            if (!$('input:radio[id=id_hoy_1]:checked').val()) {
+                    console.log("hoy chequeded")
+                    band = true;
+                    band1 = true;
+                    band4 = true;
+                }
         }
 
-        if (band && band1){
+        if (band && band1 && band4){
             progreso();
             return true;
         }else{
