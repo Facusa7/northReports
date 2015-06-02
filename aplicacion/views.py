@@ -95,10 +95,9 @@ def inicializarVariables(request):
     request.session['detalleRecargosyDescuentos'] = 0
 
 
-
 def transformacionGenerica(data):
     resultado = []
-    if data['cms_puro'] == None: # Esto se hace en casos donde no se trajo cms_puro sino que centimetros.
+    if data['cms_puro'] == None:  # Esto se hace en casos donde no se trajo cms_puro sino que centimetros.
         data['cms_puro'] = data['centimetros']
 
     if data['RecargoColor'] == None:
@@ -121,7 +120,7 @@ def transformacionGenerica(data):
 
     totalBruto = valorAnuncio + totalRecargo
 
-    descCms = 0  #Preguntar!! lo hacemos ahora porque está tirando un error. Pero por formula de excel no tenía el if de totalBruto
+    descCms = 0  # Preguntar!! lo hacemos ahora porque está tirando un error. Pero por formula de excel no tenía el if de totalBruto
     if totalBruto != 0:
         descCms = math.ceil((round(data['DescPromocion'] / totalBruto, 2) * data['cms_puro']))
 
@@ -137,10 +136,10 @@ def transformacionGenerica(data):
 
     netoSinIva = totalBruto - totalDescuento
 
-
-    resultado = {'valorAnuncio':valorAnuncio,'descManual':descManual,'totalRecargo':totalRecargo,'totalBruto':totalBruto,'totalDescuento':totalDescuento,'descCms':descCms,'cmsNeto':cmsNeto,'descAMano':descAMano,'netoSinIva':netoSinIva}
+    resultado = {'valorAnuncio': valorAnuncio, 'descManual': descManual, 'totalRecargo': totalRecargo,
+                 'totalBruto': totalBruto, 'totalDescuento': totalDescuento, 'descCms': descCms, 'cmsNeto': cmsNeto,
+                 'descAMano': descAMano, 'netoSinIva': netoSinIva}
     return resultado
-
 
 
 @login_required
@@ -207,7 +206,7 @@ def reportesFormasDePago(request):
                             otros = '2 3 9 10 11'
                             otrasFormasDePago = 'Mensual-Tarjeta-Migracion-Cuenta_Interna-Compensacion_Efectivo'
                             if request.session['titulo'] != '' and request.session['titulo'] != 0:
-                                #-Mensual-Tarjeta-Migracion-Cuenta_Interna-Compensacion_Efectivo
+                                # -Mensual-Tarjeta-Migracion-Cuenta_Interna-Compensacion_Efectivo
                                 request.session['titulo'] = request.session['titulo'] + ' - Otras Formas de Pago'
                             else:
                                 request.session['titulo'] = 'Otras Formas de Pago'
@@ -217,7 +216,6 @@ def reportesFormasDePago(request):
                                 otros))
 
                 listaAux = dictfetchall(cursor)
-
 
                 request.session['lista_resultados'] = listaAux
 
@@ -236,7 +234,7 @@ def reportesFormasDePago(request):
                     else:
                         grupo = int(data['Grupo'])
                         if grupo == 10:
-                            grupo = 9  #Esto es porque Directas es 9 y 10.
+                            grupo = 9  # Esto es porque Directas es 9 y 10.
                         if grupo == 0:
                             grupo = 99  # Grupo 99 es contado y grupo 0 tambien lo agregamos como contado
 
@@ -247,12 +245,14 @@ def reportesFormasDePago(request):
                                       RecargoLogo=data['RecargoLogo'], fechafactura=data['fechafactura'],
                                       nrofactura=data['nrofactura'], nropedido=data['nropedido'],
                                       CodigoAviso=data['CodigoAviso'], OrdenPublicidad=data['OrdenPublicidad'],
-                                      DescManual=resultado['descManual'], TotalRecargo=resultado['totalRecargo'], TotalBruto=resultado['totalBruto'],
+                                      DescManual=resultado['descManual'], TotalRecargo=resultado['totalRecargo'],
+                                      TotalBruto=resultado['totalBruto'],
                                       DescPromocion=data['DescPromocion'], DescConvenio=data['DescConvenio'],
                                       ComAgencia=data['DescAgencia'],
-                                      DescAgencia=resultado['descAMano'], TotalDescuento=resultado['totalDescuento'], NetoSinIva=resultado['netoSinIva'],
+                                      DescAgencia=resultado['descAMano'], TotalDescuento=resultado['totalDescuento'],
+                                      NetoSinIva=resultado['netoSinIva'],
                                       CondIva=data[
-                                          'CondImpuesto'])  #esta es la transformación de la lista anterior mediante formulas.
+                                          'CondImpuesto'])  # esta es la transformación de la lista anterior mediante formulas.
                     lista.append(dictionary)
 
                 request.session['lista_ccA'] = lista
@@ -301,18 +301,25 @@ def someError(request):
     return render_to_response('errorGeneral.html', context_instance=RequestContext(request))
 
 
-
-def grupo_check(user, gr = []):
-    #print(GruposLoguin.objects.all())
+def grupo_check(user, gr=[]):
+    # print(GruposLoguin.objects.all())
     var = GruposLoguin.objects.all()
     if hasattr(user, 'ldap_user'):
-        nombreGrupo = user.ldap_user.dn
+        if hasattr(user,'attrs["memberof"]'):
+            nombreGrupo = user.ldap_user.attrs['memberof'][0]
+        else:
+            nombreGrupo = user.ldap_user.dn
+        nombreGrupo = nombreGrupo.replace(' ', '')
     else:
         return True
 
+    # for property, value in vars(user.ldap_user).iteritems():
+    #     print property, ": ", value
+
     for grupo in var:
 
-        if grupo.nombre in nombreGrupo:
+        grupoAux = grupo.nombre.replace(' ', '')
+        if grupoAux in nombreGrupo:
             gr.append(grupo.nombre)
             return True
 
@@ -332,7 +339,7 @@ def loginView(request):
             if user is not None:
                 grupo = []
                 if hasattr(user, 'ldap_user'):
-                        #  active directory
+                    # active directory
 
                     if grupo_check(user, grupo):
                         if user.is_active:
@@ -341,13 +348,14 @@ def loginView(request):
                             request.session['nombreUsuario'] = username
                             inicializarVariables(request)
 
-                            return render_to_response('Main.html',{'grupo':grupo}, context_instance=RequestContext(request))
+                            return render_to_response('Main.html', {'grupo': grupo},
+                                                      context_instance=RequestContext(request))
                         else:
                             message = "Usuario Inactivo"
                     else:
                         message = "No tiene permisos para acceder"
                 else:
-                    #"No es usuario de Active directory"
+                    # "No es usuario de Active directory"
 
                     if user.is_active:
                         login(request, user)
@@ -355,7 +363,8 @@ def loginView(request):
                         request.session['nombreUsuario'] = username
                         inicializarVariables(request)
 
-                        return render_to_response('Main.html', {'grupo':['todo']}, context_instance=RequestContext(request))
+                        return render_to_response('Main.html', {'grupo': ['todo']},
+                                                  context_instance=RequestContext(request))
                     else:
                         message = "Usuario Inactivo"
             else:
@@ -515,7 +524,7 @@ def viewToXls(request):
         resguardoTitulo = 'V N A de Publicidad'
         request.session['titulo'] = 'Ventas Netas Anuales de Publicidad'
 
-    if  request.session['codigoRemoto'] == 0:
+    if request.session['codigoRemoto'] == 0:
         titulo = (request.session['titulo'])
     else:
         titulo = (request.session['titulo'] + ' - ' + request.session['codigoRemoto'])  # .replace(' ', '_')
@@ -586,7 +595,7 @@ def viewToXls(request):
 
     fuente = xlwt.Font()
     fuente.name = 'Arial'
-    #1:blanco 2:Rojo 3:verdeClaro 4:Azul  5:
+    # 1:blanco 2:Rojo 3:verdeClaro 4:Azul  5:
     fuente.colour_index = 8
     fuente.bold = True
     estilo0 = xlwt.XFStyle()
@@ -602,7 +611,6 @@ def viewToXls(request):
     estiloFecha.alignment = alignment
 
     estiloFecha.borders = borders
-
 
     estilo2 = xlwt.XFStyle()
     estilo2.num_format_str = 'HH:MM'
@@ -688,14 +696,14 @@ def viewToXls(request):
                 sheet.write(ultimaFila, hcol, 'Totales:                      ', estiloUltimaFila)
             else:
                 sheet.write(ultimaFila, hcol, ultimoElemento[hcol_data], estiloUltimaFila)
-      # elif tituloCompleto == 'V_N_A_de_Publicidad-Chaco':
+                # elif tituloCompleto == 'V_N_A_de_Publicidad-Chaco':
 
 
 
     else:
 
         if resguardoTitulo != 'V N A de Publicidad':
-            if len(keys)<=6:
+            if len(keys) <= 6:
                 sheet.col(1).width = 256 * 28
                 sheet.col(2).width = 256 * 28
                 sheet.col(3).width = 256 * 28
@@ -731,12 +739,12 @@ def viewToXls(request):
                         n = str(e) + ' (de ' + str(e) + ' a ' + str(e1) + ')'
                         # pprint.pprint(n)
                         sheet.write(i, j, n, style)
-                    elif isinstance(e,str) and 'Total' in e:
+                    elif isinstance(e, str) and 'Total' in e:
                         marcarFilaConTotales = i
                         sheet.write(i, j, e, estiloUltimaFilaStr)
-                    elif marcarFilaConTotales != 0 and marcarFilaConTotales==i:
-                        if isinstance(e,float) or isinstance(e,int):
-                            sheet.write(marcarFilaConTotales, j, round(e,2), estiloUltimaFila)
+                    elif marcarFilaConTotales != 0 and marcarFilaConTotales == i:
+                        if isinstance(e, float) or isinstance(e, int):
+                            sheet.write(marcarFilaConTotales, j, round(e, 2), estiloUltimaFila)
                         else:
                             sheet.write(marcarFilaConTotales, j, e, estiloUltimaFilaStr)
 
@@ -751,7 +759,7 @@ def viewToXls(request):
 
                         if 'fecha' in col or 'Fecha' in col:
 
-                            sheet.write(i, j, datetime.strptime(str(e.date()),'%Y-%m-%d'), estiloFecha)
+                            sheet.write(i, j, datetime.strptime(str(e.date()), '%Y-%m-%d'), estiloFecha)
                         else:
                             sheet.write(i, j, e, style)
 
@@ -1070,6 +1078,28 @@ def jsonPromociones(request):
     return HttpResponse(jsony, content_type='application/json')
 
 
+def jsonCapturadoresIva(request):
+    result = request.session['data']
+    resultGrid = []
+    for data in result:
+        data.pop('fechaHoraCaptura', None)
+        resultGrid.append(data)
+
+
+    #########   Variables para Excel    ################################
+
+
+    request.session['keys'] = ["AgenciaCliente", "CodigoAviso", "Aviso", "centimetros", "ValorSinImpuestos",
+                               "fechaHoraCaptura", "OrdenPublicidad", "nombre", "TasaIVA", "NombreUsuario", 'revision']
+
+    request.session['headers'] = ["Agencia Cliente", "Cod Aviso", "Aviso", "Centimetros", "Valor sin Imp", "Captura",
+                                  "Orden Publicidad", "Forma de Pago", "Tasa IVA", "Nombre Usuario", 'Revision']
+
+    #########################################################
+    jsony = json.dumps(resultGrid)
+    return HttpResponse(jsony, content_type='application/json')
+
+
 @login_required
 def listaCtaCteA(request):
     return render_to_response('reportesEstadisticos/reportesFormasPago/listaCtaCteA.html',
@@ -1197,7 +1227,7 @@ def cuentaCorrienteA(request):
             listaCuentaCorrientePorAviso = json.dumps(listaCuentaCorrientePorAviso, cls=DjangoJSONEncoder)
             return HttpResponse(
                 json.dumps({'agrupacion': agrupacion, 'listaCuentaCorrientePorAviso': listaCuentaCorrientePorAviso}),
-                content_type='application/javascript')  #reemplazo el simplejason x json
+                content_type='application/javascript')  # reemplazo el simplejason x json
 
         elif agrupacion == u'2':
             # ##### Hacemos lo mismo que arriba pero ahora ordenamos por Tipo de Cliente ##################################
@@ -1213,7 +1243,7 @@ def cuentaCorrienteA(request):
             for key, val in itertools.groupby(listaCuentaCorrienteOrdenada, lambda v: v['Grupo']):
                 TotalCms = sum(item['TotalCms'] for item in val)
                 Total_TotalCms += TotalCms
-                #aca creo la lista por primera vez con los N tipo de avisos que existen
+                # aca creo la lista por primera vez con los N tipo de avisos que existen
                 listaCuentaCorrientePorCliente.append({'Grupo': key, 'TotalCms': TotalCms})
 
             i = 0
@@ -1318,7 +1348,7 @@ def cuentaCorrienteA(request):
             # pprint.pprint(listaCuentaCorrientePorCliente)
             return HttpResponse(json.dumps(
                 {'agrupacion': agrupacion, 'listaCuentaCorrientePorCliente': listaCuentaCorrientePorCliente}),
-                                content_type='application/javascript')  #reemplazo el simplejason x json
+                content_type='application/javascript')  # reemplazo el simplejason x json
         else:
             request.session['data'] = listaCuentaCorriente
 
@@ -1488,7 +1518,7 @@ def ajaxGruposCuentaCorriente(request, lista, titulo, agrupacion):
         for key, val in itertools.groupby(listaOrdenada, lambda v: v['AgenciaCliente']):
             TotalCms = sum(item['TotalCms'] for item in val)
             Total_TotalCms += TotalCms
-            #aca creo la lista por primera vez con los N tipo de avisos que existen
+            # aca creo la lista por primera vez con los N tipo de avisos que existen
             listaPorCliente.append({'AgenciaCliente': key, 'TotalCms': TotalCms})
 
         i = 0
@@ -1702,7 +1732,7 @@ def ventasMensuales(request):
                 df = DateFormat(fechaHasta)
                 fechaHasta = df.format('Y-d-m')
 
-                #Para poder guardar en la BD
+                # Para poder guardar en la BD
                 request.session['mesHastaAGuardar'] = df.format('m')
                 request.session['anioHastaAGuardar'] = df.format('y')
 
@@ -2130,7 +2160,7 @@ def guardarTotales(request):
                                 contado_netoSinIva,
                                 total_cms, total_netoSinIva, request.session['userID'],
                                 request.session['codigoRemoto']
-                               ))
+                                ))
                 if request.session['idLineaPublicidad'] != 0:
                     id = request.session['idLineaPublicidad']
                     cursor.execute("UPDATE lineaventapublicidad SET activo = 0 WHERE id=%s", [id])
@@ -2493,8 +2523,8 @@ def detalleCmsVendidosyCedidos(request):
     else:
         return HttpResponseRedirect('/ventasMensuales')
 
-def detalleRecargosyDescuentos(request):
 
+def detalleRecargosyDescuentos(request):
     if request.session['diccionarioRecyDesc'] != 0:
 
         data = request.session['diccionarioRecyDesc']
@@ -2542,7 +2572,7 @@ def detalleRecargosyDescuentos(request):
                                    'tit': 'Detalle de Recargos y Descuentos'},
                                   context_instance=RequestContext(request))
     else:
-        #creo esta variable para saber si selecciono desde el menú y no se puede acceder xq no estan cargadas. Una vez que se cargue el form se lo direccione directamente.
+        # creo esta variable para saber si selecciono desde el menú y no se puede acceder xq no estan cargadas. Una vez que se cargue el form se lo direccione directamente.
         request.session['detalleRecargosyDescuentos'] = 1
         return HttpResponseRedirect('/ventasMensuales')
 
@@ -2602,10 +2632,12 @@ def viewFormPromociones(request):
                                   fechafactura=fechafactura,
                                   nrofactura=data['nrofactura'], nropedido=data['nropedido'],
                                   CodigoAviso=data['CodigoAviso'], OrdenPublicidad=data['OrdenPublicidad'],
-                                  DescManual=resultado['descManual'], TotalRecargo=resultado['totalRecargo'], TotalBruto=resultado['totalBruto'],
+                                  DescManual=resultado['descManual'], TotalRecargo=resultado['totalRecargo'],
+                                  TotalBruto=resultado['totalBruto'],
                                   DescPromocion=data['DescPromocion'], DescConvenio=data['DescConvenio'],
                                   ComAgencia=data['DescAgencia'],
-                                  DescAgencia=resultado['descAMano'], TotalDescuento=resultado['totalDescuento'], NetoSinIva=resultado['netoSinIva'],
+                                  DescAgencia=resultado['descAMano'], TotalDescuento=resultado['totalDescuento'],
+                                  NetoSinIva=resultado['netoSinIva'],
                                   ValorAuxiliar=data['ValorAuxiliar'])
                 lista.append(dictionary)
 
@@ -2619,7 +2651,7 @@ def viewFormPromociones(request):
                               context_instance=RequestContext(request))
     # except Exception as e:
     #
-    #     return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
+    # return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
     #                                                   'tipo': type(e)})  # , context_instance=RequestContext(request)
 
 
@@ -2640,7 +2672,7 @@ def promociones(request):
 
         titulo = ''
 
-        #esta variable es para el excel, para resaltar los totalizadores.
+        # esta variable es para el excel, para resaltar los totalizadores.
         request.session['reporteConTotales'] = 0
 
         listaPromociones = request.session['listaPromociones']
@@ -2833,7 +2865,7 @@ def promociones(request):
 
 def json_GrupoPromociones(request):
     results = request.session['listaPromocionesGrupo']
-    #request.session['titulo'] = 'Todas las Promociones'
+    # request.session['titulo'] = 'Todas las Promociones'
     request.session['data'] = results
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
@@ -2843,7 +2875,6 @@ def json_AvisosFacturadosYPublicados(request):
     results = request.session['lista_resultados']
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
-
 
 
 @login_required
@@ -2867,7 +2898,7 @@ def jsonTotalVendedorxHora(request):
         totalesDeHora[i].update({'netosinivaxVendedor': DescCms})
         i += 1
 
-    #-----------------variables para cargar la data para el Excel-----------------------------------------------------------
+    # -----------------variables para cargar la data para el Excel-----------------------------------------------------------
 
 
     horaAnterior = listaVendedorHora[0]['horaCaptura']
@@ -2876,7 +2907,7 @@ def jsonTotalVendedorxHora(request):
 
         if horaAnterior != data['horaCaptura']:
             band = False
-            i=0
+            i = 0
             while band == False:
 
                 if totalesDeHora[i]['horaCaptura'] == horaAnterior:
@@ -2885,46 +2916,50 @@ def jsonTotalVendedorxHora(request):
                     band = True
                 i += 1
 
-            listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'Total', 'cmsNetoxVendedor':filaDatos['cmsNetoxVendedor'],'netosinivaxVendedor':filaDatos['netosinivaxVendedor']})
-            listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'', 'cmsNetoxVendedor':'','netosinivaxVendedor':''})
+            listaConTotales.append(
+                {'NombreVendedor': '', 'horaCaptura': 'Total', 'cmsNetoxVendedor': filaDatos['cmsNetoxVendedor'],
+                 'netosinivaxVendedor': filaDatos['netosinivaxVendedor']})
+            listaConTotales.append(
+                {'NombreVendedor': '', 'horaCaptura': '', 'cmsNetoxVendedor': '', 'netosinivaxVendedor': ''})
 
             horaAnterior = data['horaCaptura']
 
         listaConTotales.append(data)
     band = False
-    i=0
+    i = 0
     while not band:
         if totalesDeHora[i]['horaCaptura'] == horaAnterior:
-
             filaDatos = totalesDeHora[i]
             band = True
         i += 1
-    listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'Total', 'cmsNetoxVendedor':filaDatos['cmsNetoxVendedor'],'netosinivaxVendedor':filaDatos['netosinivaxVendedor']})
+    listaConTotales.append(
+        {'NombreVendedor': '', 'horaCaptura': 'Total', 'cmsNetoxVendedor': filaDatos['cmsNetoxVendedor'],
+         'netosinivaxVendedor': filaDatos['netosinivaxVendedor']})
 
     request.session['data'] = listaConTotales
 
     #
-    request.session['headers'] = ['Hora','Vendedor','Cms Netos','Neto Sin IVA']
+    request.session['headers'] = ['Hora', 'Vendedor', 'Cms Netos', 'Neto Sin IVA']
 
     #
     request.session['titulo'] = 'Totales de Avisos Capturados por Vendedor'
     #
-    request.session['keys'] = ['horaCaptura','NombreVendedor','cmsNetoxVendedor','netosinivaxVendedor']
+    request.session['keys'] = ['horaCaptura', 'NombreVendedor', 'cmsNetoxVendedor', 'netosinivaxVendedor']
 
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
+
 
 def jsonTotalVendedorxHoraAjax(request):
     results = request.session['listaVendedorHoraSegunFormaDePago']
 
 
 
-    #todo: cargar las variables para el excel
+    # todo: cargar las variables para el excel
 
 
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
-
 
 
 def viewFormVentasCaptura(request):
@@ -2956,26 +2991,26 @@ def viewFormVentasCaptura(request):
                 request.session['codigoRemoto'] = 'Corrientes'
 
             formaDePago = formulario.cleaned_data['formaDePago']
-            if formaDePago== u'1':
+            if formaDePago == u'1':
                 cursor.execute(
-                "SELECT * FROM VentasDiaHora "
-                "where primerafechaapublicar >= %s and ultimafechaapublicar <= %s and codigoremoto = %s "
-                "and CodigoFmPago=4 order by aviso",
-                [fechaDesde, fechaHasta, codRemoto])
+                    "SELECT * FROM VentasDiaHora "
+                    "where primerafechaapublicar >= %s and ultimafechaapublicar <= %s and codigoremoto = %s "
+                    "and CodigoFmPago=4 order by aviso",
+                    [fechaDesde, fechaHasta, codRemoto])
                 request.session['criterio'] = "Cuenta Corriente"
-            elif formaDePago== u'2':
+            elif formaDePago == u'2':
                 cursor.execute(
-                "SELECT * FROM VentasDiaHora "
-                "where primerafechaapublicar >= %s and ultimafechaapublicar <= %s and codigoremoto = %s "
-                "and CodigoFmPago=1 order by aviso",
-                [fechaDesde, fechaHasta, codRemoto])
+                    "SELECT * FROM VentasDiaHora "
+                    "where primerafechaapublicar >= %s and ultimafechaapublicar <= %s and codigoremoto = %s "
+                    "and CodigoFmPago=1 order by aviso",
+                    [fechaDesde, fechaHasta, codRemoto])
                 request.session['criterio'] = "Contado"
             else:
                 cursor.execute(
-                "SELECT * FROM VentasDiaHora "
-                "where primerafechaapublicar >= %s and ultimafechaapublicar <= %s and codigoremoto = %s "
-                "and CodigoFmPago <> 1 and CodigoFmPago <> 4 order by aviso",
-                [fechaDesde, fechaHasta, codRemoto])
+                    "SELECT * FROM VentasDiaHora "
+                    "where primerafechaapublicar >= %s and ultimafechaapublicar <= %s and codigoremoto = %s "
+                    "and CodigoFmPago <> 1 and CodigoFmPago <> 4 order by aviso",
+                    [fechaDesde, fechaHasta, codRemoto])
                 request.session['criterio'] = "Otras Formas de Pago"
 
             listaAux = dictfetchall(cursor)
@@ -3000,10 +3035,12 @@ def viewFormVentasCaptura(request):
                                   fechafactura=fechafactura,
                                   nrofactura=data['nrofactura'], nropedido=data['nropedido'],
                                   CodigoAviso=data['CodigoAviso'], OrdenPublicidad=data['OrdenPublicidad'],
-                                  DescManual=resultado['descManual'], TotalRecargo=resultado['totalRecargo'], TotalBruto=resultado['totalBruto'],
+                                  DescManual=resultado['descManual'], TotalRecargo=resultado['totalRecargo'],
+                                  TotalBruto=resultado['totalBruto'],
                                   DescPromocion=data['DescPromocion'], DescConvenio=data['DescConvenio'],
                                   ComAgencia=data['DescAgencia'],
-                                  DescAgencia=resultado['descAMano'], TotalDescuento=resultado['totalDescuento'], NetoSinIva=resultado['netoSinIva'],
+                                  DescAgencia=resultado['descAMano'], TotalDescuento=resultado['totalDescuento'],
+                                  NetoSinIva=resultado['netoSinIva'],
                                   diaCaptura=data['DiaCaptura'], horaCaptura=data['HoraCaptura'])
                 lista.append(dictionary)
 
@@ -3017,13 +3054,14 @@ def viewFormVentasCaptura(request):
                               context_instance=RequestContext(request))
     # except Exception as e:
     #
-    #     return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
+    # return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
     #                                                   'tipo': type(e)})  # , context_instance=RequestContext(request)
 
 
 @login_required
 def listaDiayHora(request):
     return render_to_response('reportesDeVentasDiayHora/listaDiayHora.html', context_instance=RequestContext(request))
+
 
 @login_required
 def capturaDiayHora(request):
@@ -3043,7 +3081,7 @@ def capturaDiayHora(request):
             for key, val in itertools.groupby(listaOrdenada, lambda v: v['diaCaptura']):
                 TotalCms = sum(item['centimetros'] for item in val)
                 Total_TotalCms += TotalCms
-                #aca creo la lista por primera vez con los N tipo de avisos que existen
+                # aca creo la lista por primera vez con los N tipo de avisos que existen
                 listaPorDia.append({'diaCaptura': key, 'TotalCms': TotalCms})
 
             i = 0
@@ -3100,7 +3138,8 @@ def capturaDiayHora(request):
                 data.update({'PorcentajeCms': porcentajeTotalCms, 'PorcentajeNetoSinIva': porcentajeNetoSinIva})
 
             listaPorDia.append({'diaCaptura': '', 'TotalCms': '', 'DescCms': '', 'CmsNeto': '', 'TotalBruto': '',
-                                'TotalDescuento': '', 'NetoSinIva': '', 'PorcentajeCms': '', 'PorcentajeNetoSinIva': ''})
+                                'TotalDescuento': '', 'NetoSinIva': '', 'PorcentajeCms': '',
+                                'PorcentajeNetoSinIva': ''})
 
             listaPorDia.append({'diaCaptura': 'Total General', 'TotalCms': Total_TotalCms, 'DescCms': Total_DescCms,
                                 'CmsNeto': Total_CmsNeto, 'TotalBruto': Total_TotalBruto,
@@ -3112,7 +3151,7 @@ def capturaDiayHora(request):
             agrupacion = 'diaCaptura'
             titulo = 'Dia Captura segun ' + request.session['criterio']
 
-            #Primera Columna y título necesario para el excel
+            # Primera Columna y título necesario para el excel
             request.session['titulo'] = 'Captura de Avisos por Dia segun ' + request.session['criterio']
             request.session['data'] = listaPorDia
             request.session['reporteConTotales'] = len(listaPorDia)
@@ -3132,7 +3171,7 @@ def capturaDiayHora(request):
             for key, val in itertools.groupby(listaOrdenada, lambda v: v['horaCaptura']):
                 TotalCms = sum(item['centimetros'] for item in val)
                 Total_TotalCms += TotalCms
-                #aca creo la lista por primera vez con los N tipo de avisos que existen
+                # aca creo la lista por primera vez con los N tipo de avisos que existen
                 listaPorHora.append({'horaCaptura': key, 'TotalCms': TotalCms})
 
             i = 0
@@ -3188,7 +3227,8 @@ def capturaDiayHora(request):
                 data.update({'PorcentajeCms': porcentajeTotalCms, 'PorcentajeNetoSinIva': porcentajeNetoSinIva})
 
             listaPorHora.append({'horaCaptura': '', 'TotalCms': '', 'DescCms': '', 'CmsNeto': '', 'TotalBruto': '',
-                                 'TotalDescuento': '', 'NetoSinIva': '', 'PorcentajeCms': '', 'PorcentajeNetoSinIva': ''})
+                                 'TotalDescuento': '', 'NetoSinIva': '', 'PorcentajeCms': '',
+                                 'PorcentajeNetoSinIva': ''})
 
             listaPorHora.append({'horaCaptura': 'Total General', 'TotalCms': Total_TotalCms, 'DescCms': Total_DescCms,
                                  'CmsNeto': Total_CmsNeto, 'TotalBruto': Total_TotalBruto,
@@ -3199,8 +3239,8 @@ def capturaDiayHora(request):
             agrupacion = 'horaCaptura'
             titulo = 'Hora Captura segun ' + request.session['criterio']
 
-            #excel
-            request.session['titulo'] = 'Captura de Avisos por Hora segun '+ request.session['criterio']
+            # excel
+            request.session['titulo'] = 'Captura de Avisos por Hora segun ' + request.session['criterio']
             request.session['data'] = listaPorHora
             request.session['reporteConTotales'] = len(listaPorHora)
             primeraColumna = 'Hora'
@@ -3210,7 +3250,7 @@ def capturaDiayHora(request):
         fechaDesde = request.session['fechaDesde']
         fechaHasta = request.session['fechaHasta']
 
-        #Datos necesarios para el Excel
+        # Datos necesarios para el Excel
         request.session['headers'] = [primeraColumna, 'Total Cms', 'Desc Cms', 'Cms Neto', 'Total Bruto', 'Total Desc.',
                                       'Neto sin Iva', '% Centimetros', '% Neto sin Iva']
         request.session['keys'] = [keyPrimeraColumna, 'TotalCms', 'DescCms', 'CmsNeto', 'TotalBruto', 'TotalDescuento',
@@ -3227,6 +3267,7 @@ def capturaDiayHora(request):
 @login_required
 def listaVentasPorVendedor(request):
     return render_to_response('reportesVendedor/listaVentasPorVendedor.html', context_instance=RequestContext(request))
+
 
 @login_required
 def formVentasVendedor(request):
@@ -3245,7 +3286,7 @@ def formVentasVendedor(request):
                 # Se hace para verificar que se guarde un mes
                 request.session['dia'] = df.format('d')
 
-                #Para poder guardar en la BD
+                # Para poder guardar en la BD
                 request.session['mesDesdeAGuardar'] = df.format('m')
                 request.session['anioDesdeAGuardar'] = df.format('Y')
 
@@ -3271,14 +3312,14 @@ def formVentasVendedor(request):
                 else:
                     request.session['codigoRemoto'] = 'Corrientes'
 
-
                 cursor.execute("SELECT * FROM ventasDiaHoraVendedor where primerafechaapublicar >= %s and "
                                "ultimafechaapublicar <= %s and codigoremoto=%s",
                                (fechaDesde, fechaHasta, codRemoto))
 
                 listaBruta = []
                 for data in dictfetchall(cursor):
-                    dictionary = dict(HoraCaptura=data['HoraCaptura'], AgenciaCliente=data['AgenciaCliente'], #Codigo=data['Codigo'],
+                    dictionary = dict(HoraCaptura=data['HoraCaptura'], AgenciaCliente=data['AgenciaCliente'],
+                                      #Codigo=data['Codigo'],
                                       Aviso=data['Aviso'], centimetros=data['centimetros'],
                                       ValorAnuncio=data['ValorAnuncio'], RecargoColor=data['RecargoColor'],
                                       RecargoLogo=data['RecargoLogo'], DescPromocion=data['DescPromocion'],
@@ -3289,13 +3330,14 @@ def formVentasVendedor(request):
                                       CodigoAviso=data['CodigoAviso'],
                                       OrdenPublicidad=data['OrdenPublicidad'],
                                       ValorSinImpuestos=data['ValorSinImpuestos'],
-                                      valorapagar=data['valorapagar'], SupSaCh = data['SupSaCh'],
+                                      valorapagar=data['valorapagar'], SupSaCh=data['SupSaCh'],
                                       formaDePago=data['CodigoFmPago'],
                                       diaCaptura=data['DiaCaptura'], nombreVendedor=data['nombreVendedor'])
                     listaBruta.append(dictionary)
 
                 request.session['listaBrutaParaVendedores'] = listaBruta
-                return render_to_response('reportesVendedor/listaVentasPorVendedor.html', context_instance=RequestContext(request))
+                return render_to_response('reportesVendedor/listaVentasPorVendedor.html',
+                                          context_instance=RequestContext(request))
 
 
         else:
@@ -3308,6 +3350,7 @@ def formVentasVendedor(request):
         return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
                                                       'tipo': type(e)})  # , context_instance=RequestContext(request)
 
+
 @login_required
 def ventasVendedorPorHora(request):
     if request.session['listaBrutaParaVendedores'] != 0:
@@ -3316,9 +3359,6 @@ def ventasVendedorPorHora(request):
         listaAuxiliar = []
         cmsNetoxVendedorxHora = 0
         netosinivaxVendedorxHora = 0
-
-
-
 
         if listaBruta != []:
 
@@ -3353,7 +3393,6 @@ def ventasVendedorPorHora(request):
                 if totalBruto != 0:
                     descCms = math.ceil((round((data['DescPromocion'] / totalBruto), 2)) * data['centimetros'])
 
-
                 cmsNeto = data['centimetros'] - descCms
 
                 descAMano = 0
@@ -3381,37 +3420,35 @@ def ventasVendedorPorHora(request):
                         vendedorActual = elemento['nombreVendedor']
                         # pprint.pprint(vendedorActual==vendedorAnterior)
                         if (vendedorAnterior != vendedorActual):
-                            diccionarioVendedorxHora = dict(NombreVendedor= vendedorAnterior,horaCaptura=horaAnterior,
-                                                            cmsNetoxVendedor = cmsNetoxVendedorxHora,
-                                                            netosinivaxVendedor = netosinivaxVendedorxHora)
+                            diccionarioVendedorxHora = dict(NombreVendedor=vendedorAnterior, horaCaptura=horaAnterior,
+                                                            cmsNetoxVendedor=cmsNetoxVendedorxHora,
+                                                            netosinivaxVendedor=netosinivaxVendedorxHora)
 
                             listaVendedorHora.append(diccionarioVendedorxHora)
                             vendedorAnterior = vendedorActual
                             cmsNetoxVendedorxHora = 0
                             netosinivaxVendedorxHora = 0
 
-
                         cmsNetoxVendedorxHora = cmsNetoxVendedorxHora + elemento['CmsNeto']
                         netosinivaxVendedorxHora = netosinivaxVendedorxHora + elemento['NetoSinIva']
 
-                    diccionarioVendedorxHora = dict(NombreVendedor= vendedorAnterior,horaCaptura=horaAnterior,
-                                                            cmsNetoxVendedor = cmsNetoxVendedorxHora,
-                                                            netosinivaxVendedor = netosinivaxVendedorxHora)
+                    diccionarioVendedorxHora = dict(NombreVendedor=vendedorAnterior, horaCaptura=horaAnterior,
+                                                    cmsNetoxVendedor=cmsNetoxVendedorxHora,
+                                                    netosinivaxVendedor=netosinivaxVendedorxHora)
 
                     listaVendedorHora.append(diccionarioVendedorxHora)
 
-
                     cmsNetoxVendedorxHora = 0
                     netosinivaxVendedorxHora = 0
-                    listaAuxiliar=[]
-                    diccionarioHoraVendedor=dict()
+                    listaAuxiliar = []
+                    diccionarioHoraVendedor = dict()
 
-
-                diccionarioHoraVendedor = dict(horaCaptura=hora, nombreVendedor=data['nombreVendedor'], CmsNeto=cmsNeto, NetoSinIva=netoSinIva)
+                diccionarioHoraVendedor = dict(horaCaptura=hora, nombreVendedor=data['nombreVendedor'], CmsNeto=cmsNeto,
+                                               NetoSinIva=netoSinIva)
                 listaAuxiliar.append(diccionarioHoraVendedor)
 
                 horaAnterior = hora
-    ####################################################################################################
+                ####################################################################################################
             ##### Se repite este codigo para ir discriminando los vendedores la la última hora que fue almacenado en Lista auxiliar.
             listaAuxiliarOrdenada = sorted(listaAuxiliar, key=operator.itemgetter('nombreVendedor'))
             vendedorAnterior = listaAuxiliarOrdenada[0]['nombreVendedor']
@@ -3422,25 +3459,23 @@ def ventasVendedorPorHora(request):
                 vendedorActual = elemento['nombreVendedor']
                 # pprint.pprint(vendedorActual==vendedorAnterior)
                 if (vendedorAnterior != vendedorActual):
-                    diccionarioVendedorxHora = dict(NombreVendedor= vendedorAnterior,horaCaptura=horaAnterior,
-                                                    cmsNetoxVendedor = cmsNetoxVendedorxHora,
-                                                    netosinivaxVendedor = netosinivaxVendedorxHora)
+                    diccionarioVendedorxHora = dict(NombreVendedor=vendedorAnterior, horaCaptura=horaAnterior,
+                                                    cmsNetoxVendedor=cmsNetoxVendedorxHora,
+                                                    netosinivaxVendedor=netosinivaxVendedorxHora)
 
                     listaVendedorHora.append(diccionarioVendedorxHora)
                     vendedorAnterior = vendedorActual
                     cmsNetoxVendedorxHora = 0
                     netosinivaxVendedorxHora = 0
 
-
                 cmsNetoxVendedorxHora = cmsNetoxVendedorxHora + elemento['CmsNeto']
                 netosinivaxVendedorxHora = netosinivaxVendedorxHora + elemento['NetoSinIva']
 
-            diccionarioVendedorxHora = dict(NombreVendedor= vendedorAnterior,horaCaptura=horaAnterior,
-                                                    cmsNetoxVendedor = cmsNetoxVendedorxHora,
-                                                    netosinivaxVendedor = netosinivaxVendedorxHora)
+            diccionarioVendedorxHora = dict(NombreVendedor=vendedorAnterior, horaCaptura=horaAnterior,
+                                            cmsNetoxVendedor=cmsNetoxVendedorxHora,
+                                            netosinivaxVendedor=netosinivaxVendedorxHora)
 
             listaVendedorHora.append(diccionarioVendedorxHora)
-
 
             totalesDeHora = []
             totalCms = 0
@@ -3457,7 +3492,6 @@ def ventasVendedorPorHora(request):
                 totalesDeHora[i].update({'netosinivaxVendedor': DescCms})
                 i += 1
 
-
             request.session['listaDeTotalesVendedorHora'] = totalesDeHora
 
             request.session['listaVendedorHoraSegunFormaDePago'] = listaVendedorHora
@@ -3472,10 +3506,10 @@ def ventasVendedorPorHora(request):
 
         tit = 'Total de Vendedor por Franja Horaria'
         request.session['titulo'] = tit
-       # pprint.pprint(listaVendedorHora)
+        # pprint.pprint(listaVendedorHora)
         return render_to_response('reportesVendedor/vendedorxHora.html', {'fechaDesde': fechaDesde,
-                                                        'fechaHasta': fechaHasta,
-                                                        'codigoRemoto': codigoRemoto, 'tit': tit},
+                                                                          'fechaHasta': fechaHasta,
+                                                                          'codigoRemoto': codigoRemoto, 'tit': tit},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseRedirect('/reportesVendedor/formVentasVendedor')
@@ -3483,7 +3517,6 @@ def ventasVendedorPorHora(request):
 
 @login_required
 def ajaxVendedorHoraFormasDePago(request):
-
     listaVendedorHora = request.session['listaBrutaParaVendedores']
     request.session['reporteConTotales'] = 0
 
@@ -3491,15 +3524,13 @@ def ajaxVendedorHoraFormasDePago(request):
     listaDeHoras = []
     listaDeVendedores = []
 
-
     if request.method == 'POST' and request.is_ajax():
 
         seleccion = request.POST["seleccion"]
 
-
         listaSegunFormaDePago = []
 
-        
+
         # 1: Contado---------------2: Cta Cte -------------- 3: Cortesias ------- 4: Reposición -------------5: Compensación
         if seleccion == u'0':
             listaVendedorHora = request.session['listaVendedorHora']
@@ -3515,7 +3546,7 @@ def ajaxVendedorHoraFormasDePago(request):
                 totalesDeHora[i].update({'netosinivaxVendedor': DescCms})
                 i += 1
 
-            #-----------------variables para cargar la data para el Excel-----------------------------------------------------------
+            # -----------------variables para cargar la data para el Excel-----------------------------------------------------------
 
 
             horaAnterior = listaVendedorHora[0]['horaCaptura']
@@ -3524,7 +3555,7 @@ def ajaxVendedorHoraFormasDePago(request):
 
                 if horaAnterior != data['horaCaptura']:
                     band = False
-                    i=0
+                    i = 0
                     while band == False:
 
                         if totalesDeHora[i]['horaCaptura'] == horaAnterior:
@@ -3533,45 +3564,49 @@ def ajaxVendedorHoraFormasDePago(request):
                             band = True
                         i += 1
 
-                    listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'Total', 'cmsNetoxVendedor':filaDatos['cmsNetoxVendedor'],'netosinivaxVendedor':filaDatos['netosinivaxVendedor']})
-                    listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'', 'cmsNetoxVendedor':'','netosinivaxVendedor':''})
+                    listaConTotales.append({'NombreVendedor': '', 'horaCaptura': 'Total',
+                                            'cmsNetoxVendedor': filaDatos['cmsNetoxVendedor'],
+                                            'netosinivaxVendedor': filaDatos['netosinivaxVendedor']})
+                    listaConTotales.append(
+                        {'NombreVendedor': '', 'horaCaptura': '', 'cmsNetoxVendedor': '', 'netosinivaxVendedor': ''})
 
                     horaAnterior = data['horaCaptura']
 
                 listaConTotales.append(data)
             band = False
-            i=0
+            i = 0
             while not band:
                 if totalesDeHora[i]['horaCaptura'] == horaAnterior:
-
                     filaDatos = totalesDeHora[i]
                     band = True
                 i += 1
-            listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'Total', 'cmsNetoxVendedor':filaDatos['cmsNetoxVendedor'],'netosinivaxVendedor':filaDatos['netosinivaxVendedor']})
+            listaConTotales.append(
+                {'NombreVendedor': '', 'horaCaptura': 'Total', 'cmsNetoxVendedor': filaDatos['cmsNetoxVendedor'],
+                 'netosinivaxVendedor': filaDatos['netosinivaxVendedor']})
 
             request.session['data'] = listaConTotales
             #
-            request.session['headers'] = ['Hora','Vendedor','Cms Netos','Neto Sin IVA']
+            request.session['headers'] = ['Hora', 'Vendedor', 'Cms Netos', 'Neto Sin IVA']
             #
             request.session['titulo'] = 'Totales de Cms Capturados por Vendedor'
             #
-            request.session['keys'] = ['horaCaptura','NombreVendedor','cmsNetoxVendedor','netosinivaxVendedor']
+            request.session['keys'] = ['horaCaptura', 'NombreVendedor', 'cmsNetoxVendedor', 'netosinivaxVendedor']
 
-            return HttpResponse(json.dumps({'seleccion':seleccion}), content_type='application/javascript')  #reemplazo el simplejason x json
+            return HttpResponse(json.dumps({'seleccion': seleccion}),
+                                content_type='application/javascript')  #reemplazo el simplejason x json
 
         elif seleccion == u'1':
             for data in listaVendedorHora:
                 if data['formaDePago'] == 1:
                     listaSegunFormaDePago.append(data)
 
-            #esta variable es para el titulo del grid.
+            # esta variable es para el titulo del grid.
             tipo = 'Contado/Efectivo'
 
         elif seleccion == u'2':
             for data in listaVendedorHora:
                 if data['formaDePago'] == 4:
                     listaSegunFormaDePago.append(data)
-
 
             tipo = 'Cuenta Corriente'
 
@@ -3593,12 +3628,9 @@ def ajaxVendedorHoraFormasDePago(request):
                     listaSegunFormaDePago.append(data)
             tipo = 'Compensacion'
 
-
-
         listaAuxiliar = []
         cmsNetoxVendedorxHora = 0
         netosinivaxVendedorxHora = 0
-
 
         if listaSegunFormaDePago != []:
 
@@ -3634,7 +3666,7 @@ def ajaxVendedorHoraFormasDePago(request):
                     descCms = math.ceil((round((data['DescPromocion'] / totalBruto), 2)) * data['centimetros'])
 
                 # else:
-                #     cmsNeto = 0
+                # cmsNeto = 0
 
                 cmsNeto = data['centimetros'] - descCms
 
@@ -3659,7 +3691,6 @@ def ajaxVendedorHoraFormasDePago(request):
 
                     listaAuxiliarOrdenada = sorted(listaAuxiliar, key=operator.itemgetter('nombreVendedor'))
 
-
                     listaAux = []
                     totalCms = 0
                     for key, val in itertools.groupby(listaAuxiliarOrdenada, lambda v: v['nombreVendedor']):
@@ -3667,9 +3698,7 @@ def ajaxVendedorHoraFormasDePago(request):
                         totalCms += cms
                         listaAux.append({'CmsNeto': cms, 'nombreVendedor': key})
 
-
                     listaDeListasPorHora.append(listaAux)
-
 
                     vendedorAnterior = listaAuxiliarOrdenada[0]['nombreVendedor']
 
@@ -3680,36 +3709,34 @@ def ajaxVendedorHoraFormasDePago(request):
                             if vendedorAnterior not in listaDeVendedores:
                                 listaDeVendedores.append(vendedorAnterior)
 
-                            diccionarioVendedorxHora = dict(NombreVendedor= vendedorAnterior,horaCaptura=horaAnterior,
-                                                            cmsNetoxVendedor = cmsNetoxVendedorxHora,
-                                                            netosinivaxVendedor = netosinivaxVendedorxHora)
+                            diccionarioVendedorxHora = dict(NombreVendedor=vendedorAnterior, horaCaptura=horaAnterior,
+                                                            cmsNetoxVendedor=cmsNetoxVendedorxHora,
+                                                            netosinivaxVendedor=netosinivaxVendedorxHora)
 
                             listaVendedorHora.append(diccionarioVendedorxHora)
                             vendedorAnterior = vendedorActual
                             cmsNetoxVendedorxHora = 0
                             netosinivaxVendedorxHora = 0
 
-
                         cmsNetoxVendedorxHora = cmsNetoxVendedorxHora + elemento['CmsNeto']
                         netosinivaxVendedorxHora = netosinivaxVendedorxHora + elemento['NetoSinIva']
 
                     if vendedorAnterior not in listaDeVendedores:
-                                listaDeVendedores.append(vendedorAnterior)
+                        listaDeVendedores.append(vendedorAnterior)
 
-                    diccionarioVendedorxHora = dict(NombreVendedor= vendedorAnterior,horaCaptura=horaAnterior,
-                                                            cmsNetoxVendedor = cmsNetoxVendedorxHora,
-                                                            netosinivaxVendedor = netosinivaxVendedorxHora)
+                    diccionarioVendedorxHora = dict(NombreVendedor=vendedorAnterior, horaCaptura=horaAnterior,
+                                                    cmsNetoxVendedor=cmsNetoxVendedorxHora,
+                                                    netosinivaxVendedor=netosinivaxVendedorxHora)
 
                     listaVendedorHora.append(diccionarioVendedorxHora)
 
-
                     cmsNetoxVendedorxHora = 0
                     netosinivaxVendedorxHora = 0
-                    listaAuxiliar=[]
-                    diccionarioHoraVendedor=dict()
+                    listaAuxiliar = []
+                    diccionarioHoraVendedor = dict()
 
-
-                diccionarioHoraVendedor = dict(horaCaptura=hora, nombreVendedor=data['nombreVendedor'], CmsNeto=cmsNeto, NetoSinIva=netoSinIva)
+                diccionarioHoraVendedor = dict(horaCaptura=hora, nombreVendedor=data['nombreVendedor'], CmsNeto=cmsNeto,
+                                               NetoSinIva=netoSinIva)
                 listaAuxiliar.append(diccionarioHoraVendedor)
 
                 horaAnterior = hora
@@ -3740,33 +3767,32 @@ def ajaxVendedorHoraFormasDePago(request):
                 # pprint.pprint(vendedorActual==vendedorAnterior)
                 if (vendedorAnterior != vendedorActual):
                     if vendedorAnterior not in listaDeVendedores:
-                                listaDeVendedores.append(vendedorAnterior)
+                        listaDeVendedores.append(vendedorAnterior)
 
-                    diccionarioVendedorxHora = dict(NombreVendedor= vendedorAnterior,horaCaptura=horaAnterior,
-                                                    cmsNetoxVendedor = cmsNetoxVendedorxHora,
-                                                    netosinivaxVendedor = netosinivaxVendedorxHora)
+                    diccionarioVendedorxHora = dict(NombreVendedor=vendedorAnterior, horaCaptura=horaAnterior,
+                                                    cmsNetoxVendedor=cmsNetoxVendedorxHora,
+                                                    netosinivaxVendedor=netosinivaxVendedorxHora)
 
                     listaVendedorHora.append(diccionarioVendedorxHora)
                     vendedorAnterior = vendedorActual
                     cmsNetoxVendedorxHora = 0
                     netosinivaxVendedorxHora = 0
 
-
                 cmsNetoxVendedorxHora = cmsNetoxVendedorxHora + elemento['CmsNeto']
                 netosinivaxVendedorxHora = netosinivaxVendedorxHora + elemento['NetoSinIva']
 
             if vendedorAnterior not in listaDeVendedores:
-                                listaDeVendedores.append(vendedorAnterior)
+                listaDeVendedores.append(vendedorAnterior)
 
-            diccionarioVendedorxHora = dict(NombreVendedor= vendedorAnterior,horaCaptura=horaAnterior,
-                                                    cmsNetoxVendedor = cmsNetoxVendedorxHora,
-                                                    netosinivaxVendedor = netosinivaxVendedorxHora)
+            diccionarioVendedorxHora = dict(NombreVendedor=vendedorAnterior, horaCaptura=horaAnterior,
+                                            cmsNetoxVendedor=cmsNetoxVendedorxHora,
+                                            netosinivaxVendedor=netosinivaxVendedorxHora)
 
             listaVendedorHora.append(diccionarioVendedorxHora)
 
 
 
-            #Todo lo siguiente comentadado lo hago para mostrar los totalizadores por hora en el excel como se muestran en el jqgrid.
+            # Todo lo siguiente comentadado lo hago para mostrar los totalizadores por hora en el excel como se muestran en el jqgrid.
 
             totalesDeHora = []
             totalCms = 0
@@ -3793,7 +3819,7 @@ def ajaxVendedorHoraFormasDePago(request):
 
                 if horaAnterior != data['horaCaptura']:
                     band = False
-                    i=0
+                    i = 0
                     while band == False:
 
                         if totalesDeHora[i]['horaCaptura'] == horaAnterior:
@@ -3802,30 +3828,31 @@ def ajaxVendedorHoraFormasDePago(request):
                             band = True
                         i += 1
 
-                    listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'Total', 'cmsNetoxVendedor':filaDatos['cmsNetoxVendedor'],'netosinivaxVendedor':filaDatos['netosinivaxVendedor']})
-                    listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'', 'cmsNetoxVendedor':'','netosinivaxVendedor':''})
+                    listaConTotales.append({'NombreVendedor': '', 'horaCaptura': 'Total',
+                                            'cmsNetoxVendedor': filaDatos['cmsNetoxVendedor'],
+                                            'netosinivaxVendedor': filaDatos['netosinivaxVendedor']})
+                    listaConTotales.append(
+                        {'NombreVendedor': '', 'horaCaptura': '', 'cmsNetoxVendedor': '', 'netosinivaxVendedor': ''})
 
                     horaAnterior = data['horaCaptura']
 
                 listaConTotales.append(data)
             band = False
-            i=0
+            i = 0
             while not band:
                 if totalesDeHora[i]['horaCaptura'] == horaAnterior:
-
                     filaDatos = totalesDeHora[i]
                     band = True
                 i += 1
-            listaConTotales.append({'NombreVendedor':'', 'horaCaptura':'Total', 'cmsNetoxVendedor':filaDatos['cmsNetoxVendedor'],'netosinivaxVendedor':filaDatos['netosinivaxVendedor']})
+            listaConTotales.append(
+                {'NombreVendedor': '', 'horaCaptura': 'Total', 'cmsNetoxVendedor': filaDatos['cmsNetoxVendedor'],
+                 'netosinivaxVendedor': filaDatos['netosinivaxVendedor']})
 
             request.session['data'] = listaConTotales
 
+            request.session['titulo'] = 'Totales de Avisos de ' + tipo
 
-
-            request.session['titulo'] = 'Totales de Avisos de '+tipo
-
-
-            request.session['keys'] = ['horaCaptura','NombreVendedor','cmsNetoxVendedor','netosinivaxVendedor']
+            request.session['keys'] = ['horaCaptura', 'NombreVendedor', 'cmsNetoxVendedor', 'netosinivaxVendedor']
 
 
             #---------------------------------------------------------------------------------------------------------------------------
@@ -3837,26 +3864,24 @@ def ajaxVendedorHoraFormasDePago(request):
         else:
             request.session['listaVendedorHoraSegunFormaDePago'] = []
 
-
-
         listaDeListasPorHora = json.dumps(listaDeListasPorHora, cls=DjangoJSONEncoder)
         listaDeHoras = json.dumps(listaDeHoras, cls=DjangoJSONEncoder)
         listaDeVendedores = json.dumps(listaDeVendedores, cls=DjangoJSONEncoder)
-        return HttpResponse(json.dumps({'tipo': tipo, 'listaDeListasPorHora':listaDeListasPorHora, 'listaDeHoras':listaDeHoras,
-                                        'listaDeVendedores':listaDeVendedores}),
-                            content_type='application/javascript')  #reemplazo el simplejason x json
-
+        return HttpResponse(
+            json.dumps({'tipo': tipo, 'listaDeListasPorHora': listaDeListasPorHora, 'listaDeHoras': listaDeHoras,
+                        'listaDeVendedores': listaDeVendedores}),
+            content_type='application/javascript')  # reemplazo el simplejason x json
 
     fechaDesde = request.session['fechaDesde']
     fechaHasta = request.session['fechaHasta']
     codigoRemoto = request.session['codigoRemoto']
     tit = request.session['titulo']
 
-
     return render_to_response('reportesVendedor/vendedorxHora.html', {'fechaDesde': fechaDesde,
-                                                    'fechaHasta': fechaHasta,
-                                                    'codigoRemoto': codigoRemoto, 'tit': tit},
+                                                                      'fechaHasta': fechaHasta,
+                                                                      'codigoRemoto': codigoRemoto, 'tit': tit},
                               context_instance=RequestContext(request))
+
 
 @login_required
 def ventasVendedorPorFormaPago(request):
@@ -3890,7 +3915,7 @@ def ventasVendedorPorFormaPago(request):
                     descCms = math.ceil((round((data['DescPromocion'] / totalBruto), 2)) * data['centimetros'])
 
                 # else:
-                #     cmsNeto = 0
+                # cmsNeto = 0
 
                 cmsNeto = data['centimetros'] - descCms
 
@@ -3903,7 +3928,7 @@ def ventasVendedorPorFormaPago(request):
                 totalDescuento = data['DescPromocion'] + data['DescConvenio'] + descAMano + data['DescAgencia']
 
                 netoSinIva = totalBruto - totalDescuento
-                dictionary = dict(NetoSinIva=netoSinIva, CmsNeto=cmsNeto, #Codigo=data['Codigo'],
+                dictionary = dict(NetoSinIva=netoSinIva, CmsNeto=cmsNeto,  #Codigo=data['Codigo'],
                                   formaDePago=data['formaDePago'],
                                   nombreVendedor=data['nombreVendedor'])
                 listaBruta.append(dictionary)
@@ -3941,7 +3966,7 @@ def ventasVendedorPorFormaPago(request):
         for key, val in itertools.groupby(listaOrdenada, lambda v: v['nombreVendedor']):
             CmsNeto = sum(item['CmsNeto'] for item in val)
             Total_CmsNeto += CmsNeto
-            #aca creo la lista por primera vez con los N tipo de avisos que existen
+            # aca creo la lista por primera vez con los N tipo de avisos que existen
             listaEfectivoAux.append({'nombreVendedor': key, 'CmsNeto': CmsNeto})
 
         i = 0
@@ -3977,11 +4002,15 @@ def ventasVendedorPorFormaPago(request):
 
         # listaEfectivoAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '','PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
 
-        listaEfectivoAux.append({'nombreVendedor': 'Total Contado','CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva, 'PorcentajeCmsNeto':total_porcentajeCmsNeto,
+        listaEfectivoAux.append(
+            {'nombreVendedor': 'Total Contado', 'CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva,
+             'PorcentajeCmsNeto': total_porcentajeCmsNeto,
 
-                                 'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago':''})
+             'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago': ''})
 
-        listaEfectivoAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '','PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
+        listaEfectivoAux.append(
+            {'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto': '', 'PorcentajeNetoSinIva': '',
+             'FormaDePago': ''})
         """ Los diccionarios vacíos son para colocar divisiones en el GRID y que la información no esté toda junta """
         listaEfectivo = json.dumps(listaEfectivoAux, cls=DjangoJSONEncoder)
 
@@ -3992,7 +4021,7 @@ def ventasVendedorPorFormaPago(request):
         for key, val in itertools.groupby(listaOrdenada, lambda v: v['nombreVendedor']):
             CmsNeto = sum(item['CmsNeto'] for item in val)
             Total_CmsNeto += CmsNeto
-            #aca creo la lista por primera vez con los N tipo de avisos que existen
+            # aca creo la lista por primera vez con los N tipo de avisos que existen
             listaCuentaCorrienteAux.append({'nombreVendedor': key, 'CmsNeto': CmsNeto})
 
         i = 0
@@ -4011,7 +4040,6 @@ def ventasVendedorPorFormaPago(request):
 
             porcentajeNetoSinIva = 0
             if Total_NetoSinIva != 0:
-
                 porcentajeNetoSinIva = (data['NetoSinIva'] / Total_NetoSinIva) * 100
                 total_porcentajeNetoSinIva += porcentajeNetoSinIva
 
@@ -4029,10 +4057,14 @@ def ventasVendedorPorFormaPago(request):
 
         # listaCuentaCorrienteAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
 
-        listaCuentaCorrienteAux.append({'nombreVendedor': 'Total Cuenta Corriente','CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva, 'PorcentajeCmsNeto':total_porcentajeCmsNeto,
+        listaCuentaCorrienteAux.append(
+            {'nombreVendedor': 'Total Cuenta Corriente', 'CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva,
+             'PorcentajeCmsNeto': total_porcentajeCmsNeto,
 
-                                 'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago':''})
-        listaCuentaCorrienteAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
+             'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago': ''})
+        listaCuentaCorrienteAux.append(
+            {'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto': '', 'PorcentajeNetoSinIva': '',
+             'FormaDePago': ''})
         listaCuentaCorriente = json.dumps(listaCuentaCorrienteAux, cls=DjangoJSONEncoder)
 
         """ Total por vendendor por Compensacion """
@@ -4042,7 +4074,7 @@ def ventasVendedorPorFormaPago(request):
         for key, val in itertools.groupby(listaOrdenada, lambda v: v['nombreVendedor']):
             CmsNeto = sum(item['CmsNeto'] for item in val)
             Total_CmsNeto += CmsNeto
-            #aca creo la lista por primera vez con los N tipo de avisos que existen
+            # aca creo la lista por primera vez con los N tipo de avisos que existen
             listaCompensacionAux.append({'nombreVendedor': key, 'CmsNeto': CmsNeto})
 
         i = 0
@@ -4061,7 +4093,6 @@ def ventasVendedorPorFormaPago(request):
 
             porcentajeNetoSinIva = 0
             if Total_NetoSinIva != 0:
-
                 porcentajeNetoSinIva = (data['NetoSinIva'] / Total_NetoSinIva) * 100
                 total_porcentajeNetoSinIva += porcentajeNetoSinIva
 
@@ -4079,11 +4110,15 @@ def ventasVendedorPorFormaPago(request):
 
         # listaCompensacionAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
 
-        listaCompensacionAux.append({'nombreVendedor': 'Total Compensacion', 'CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva,'PorcentajeCmsNeto':total_porcentajeCmsNeto,
+        listaCompensacionAux.append(
+            {'nombreVendedor': 'Total Compensacion', 'CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva,
+             'PorcentajeCmsNeto': total_porcentajeCmsNeto,
 
-                                 'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago':''})
+             'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago': ''})
 
-        listaCompensacionAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '','PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
+        listaCompensacionAux.append(
+            {'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto': '', 'PorcentajeNetoSinIva': '',
+             'FormaDePago': ''})
 
         listaCompensacion = json.dumps(listaCompensacionAux, cls=DjangoJSONEncoder)
 
@@ -4094,7 +4129,7 @@ def ventasVendedorPorFormaPago(request):
         for key, val in itertools.groupby(listaOrdenada, lambda v: v['nombreVendedor']):
             CmsNeto = sum(item['CmsNeto'] for item in val)
             Total_CmsNeto += CmsNeto
-            #aca creo la lista por primera vez con los N tipo de avisos que existen
+            # aca creo la lista por primera vez con los N tipo de avisos que existen
             listaCortesiasAux.append({'nombreVendedor': key, 'CmsNeto': CmsNeto})
 
         i = 0
@@ -4113,7 +4148,6 @@ def ventasVendedorPorFormaPago(request):
 
             porcentajeNetoSinIva = 0
             if Total_NetoSinIva != 0:
-
                 porcentajeNetoSinIva = (data['NetoSinIva'] / Total_NetoSinIva) * 100
                 total_porcentajeNetoSinIva += porcentajeNetoSinIva
 
@@ -4131,10 +4165,14 @@ def ventasVendedorPorFormaPago(request):
 
         # listaCortesiasAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
 
-        listaCortesiasAux.append({'nombreVendedor': 'Total Cortesias', 'CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva, 'PorcentajeCmsNeto':total_porcentajeCmsNeto,
+        listaCortesiasAux.append(
+            {'nombreVendedor': 'Total Cortesias', 'CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva,
+             'PorcentajeCmsNeto': total_porcentajeCmsNeto,
 
-                                 'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago':''})
-        listaCortesiasAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
+             'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago': ''})
+        listaCortesiasAux.append(
+            {'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto': '', 'PorcentajeNetoSinIva': '',
+             'FormaDePago': ''})
 
         listaCortesias = json.dumps(listaCortesiasAux, cls=DjangoJSONEncoder)
 
@@ -4145,7 +4183,7 @@ def ventasVendedorPorFormaPago(request):
         for key, val in itertools.groupby(listaOrdenada, lambda v: v['nombreVendedor']):
             CmsNeto = sum(item['CmsNeto'] for item in val)
             Total_CmsNeto += CmsNeto
-            #aca creo la lista por primera vez con los N tipo de avisos que existen
+            # aca creo la lista por primera vez con los N tipo de avisos que existen
             listaReposicionAux.append({'nombreVendedor': key, 'CmsNeto': CmsNeto})
 
         i = 0
@@ -4164,7 +4202,6 @@ def ventasVendedorPorFormaPago(request):
 
             porcentajeNetoSinIva = 0
             if Total_NetoSinIva != 0:
-
                 porcentajeNetoSinIva = (data['NetoSinIva'] / Total_NetoSinIva) * 100
                 total_porcentajeNetoSinIva += porcentajeNetoSinIva
 
@@ -4182,23 +4219,29 @@ def ventasVendedorPorFormaPago(request):
 
         # listaReposicionAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
 
-        listaReposicionAux.append({'nombreVendedor': 'Total Reposicion','CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva, 'PorcentajeCmsNeto':'',
+        listaReposicionAux.append(
+            {'nombreVendedor': 'Total Reposicion', 'CmsNeto': Total_CmsNeto, 'NetoSinIva': Total_NetoSinIva,
+             'PorcentajeCmsNeto': '',
 
-                                 'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago':''})
+             'PorcentajeNetoSinIva': total_porcentajeNetoSinIva, 'FormaDePago': ''})
 
         totalNetoGeneral = total_efectivoNetoSinIva + total_cuentaCorrienteNetoSinIva + total_compensacionNetoSinIva + total_ReposicionNetoSinIva + total_CortesiasNetoSinIva
         totalCmsGeneral = total_efectivoCms + total_cuentaCorrienteCms + total_compensacionCms + total_ReposicionCms + total_CortesiasCms
 
-        listaReposicionAux.append({'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto':'', 'PorcentajeNetoSinIva': '', 'FormaDePago':''})
+        listaReposicionAux.append(
+            {'nombreVendedor': '', 'CmsNeto': '', 'NetoSinIva': '', 'PorcentajeCmsNeto': '', 'PorcentajeNetoSinIva': '',
+             'FormaDePago': ''})
 
-        listaReposicionAux.append({'nombreVendedor': 'Total General','CmsNeto': totalCmsGeneral, 'NetoSinIva': totalNetoGeneral, 'PorcentajeCmsNeto':'',
+        listaReposicionAux.append(
+            {'nombreVendedor': 'Total General', 'CmsNeto': totalCmsGeneral, 'NetoSinIva': totalNetoGeneral,
+             'PorcentajeCmsNeto': '',
 
-                                 'PorcentajeNetoSinIva':'', 'FormaDePago': ''})
+             'PorcentajeNetoSinIva': '', 'FormaDePago': ''})
 
         listaReposicion = json.dumps(listaReposicionAux, cls=DjangoJSONEncoder)
 
 
-        #------------------------Variables y procesamiento para el excel -----------------------------------------
+        # ------------------------Variables y procesamiento para el excel -----------------------------------------
         listaData = []
         for data in listaEfectivoAux:
             listaData.append(data)
@@ -4211,15 +4254,16 @@ def ventasVendedorPorFormaPago(request):
         for data in listaReposicionAux:
             listaData.append(data)
 
-
         request.session['data'] = listaData
         #
 
-        request.session['headers'] = ['Vendedor','Cms Neto', 'Neto Sin Iva', '% Cms Neto', '% Neto Sin Iva', 'Forma de Pago']
+        request.session['headers'] = ['Vendedor', 'Cms Neto', 'Neto Sin Iva', '% Cms Neto', '% Neto Sin Iva',
+                                      'Forma de Pago']
         #
         request.session['titulo'] = 'Resumen de Ventas por Vendedor por Forma de Pago'
         #
-        request.session['keys'] = ['nombreVendedor','CmsNeto', 'NetoSinIva', 'PorcentajeCmsNeto', 'PorcentajeNetoSinIva', 'FormaDePago']
+        request.session['keys'] = ['nombreVendedor', 'CmsNeto', 'NetoSinIva', 'PorcentajeCmsNeto',
+                                   'PorcentajeNetoSinIva', 'FormaDePago']
 
 
 
@@ -4233,18 +4277,18 @@ def ventasVendedorPorFormaPago(request):
 
         return render_to_response('reportesVendedor/ventasVendedorPorFormaPago.html',
                                   {'listaReposicion': listaReposicion,
-                                    'listaCortesias': listaCortesias,
-                                   'listaCuentaCorriente':listaCuentaCorriente,
-                                   'listaCompensacion': listaCompensacion, 'listaEfectivo' : listaEfectivo,
-                                    'tit': 'Ventas por Vendedor por Forma de Pago',
+                                   'listaCortesias': listaCortesias,
+                                   'listaCuentaCorriente': listaCuentaCorriente,
+                                   'listaCompensacion': listaCompensacion, 'listaEfectivo': listaEfectivo,
+                                   'tit': 'Ventas por Vendedor por Forma de Pago',
                                    'codRemoto': codRemoto, 'fechaDesde': fechaDesde, 'fechaHasta': fechaHasta},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseRedirect('/reportesVendedor/formVentasVendedor')
 
+
 @login_required
 def formAvisosPublicadosFacturados(request):
-
     if request.method == 'POST':
         formulario = formPromociones(request.POST)
 
@@ -4257,11 +4301,9 @@ def formAvisosPublicadosFacturados(request):
 
             fechaDesdeModoLatino = df.format('d/m/Y')
 
-
             fechaHasta = formulario.cleaned_data['fechaHasta']
             df = DateFormat(formulario.cleaned_data['fechaHasta'] + timedelta(days=1))
             fechaHasta = df.format('Y-d-m')
-
 
             df = DateFormat(formulario.cleaned_data['fechaHasta'])
             fechaHastaModoLatino = df.format('d/m/Y')
@@ -4269,7 +4311,7 @@ def formAvisosPublicadosFacturados(request):
             request.session['fechaDesde'] = fechaDesdeModoLatino
             request.session['fechaHasta'] = fechaHastaModoLatino
 
-            cursor.execute("SELECT * FROM AvisosQuesefacturanNadia(%s, %s)",(fechaDesde, fechaHasta))
+            cursor.execute("SELECT * FROM AvisosQuesefacturanNadia(%s, %s)", (fechaDesde, fechaHasta))
 
             listaAux = dictfetchall(cursor)
 
@@ -4278,20 +4320,20 @@ def formAvisosPublicadosFacturados(request):
             for data in listaAux:
                 importeSinImpuestoPorDia = 0
                 if data['ImporteBruto'] != 0:
-                    porcentXDia = (data['PrecioXDia2']*100) / data['ImporteBruto']
-                    descuentosYRecargosXAviso = data['DescuentoaMano']+data['Descuentos']+data['RecargoColor']+data['RecargoLogo']
-                    descuentosYRecargosXDia = (porcentXDia * descuentosYRecargosXAviso)/100
+                    porcentXDia = (data['PrecioXDia2'] * 100) / data['ImporteBruto']
+                    descuentosYRecargosXAviso = data['DescuentoaMano'] + data['Descuentos'] + data['RecargoColor'] + \
+                                                data['RecargoLogo']
+                    descuentosYRecargosXDia = (porcentXDia * descuentosYRecargosXAviso) / 100
 
                     importeSinImpuestoPorDia = descuentosYRecargosXDia + data['PrecioXDia2']
 
-
-                data.update({'importeSinImpuestoPorDia':importeSinImpuestoPorDia})
+                data.update({'importeSinImpuestoPorDia': importeSinImpuestoPorDia})
 
                 fechaquepublica = data['FechaQuePublica'].strftime("%Y-%m-%d")
 
-                fechaquepublica = datetime.strptime(fechaquepublica,'%Y-%m-%d')
-                fechaDesde1 = datetime.strptime(fechaDesde,'%Y-%d-%m')
-                fechaHasta1 = datetime.strptime(fechaHasta,'%Y-%d-%m')
+                fechaquepublica = datetime.strptime(fechaquepublica, '%Y-%m-%d')
+                fechaDesde1 = datetime.strptime(fechaDesde, '%Y-%d-%m')
+                fechaHasta1 = datetime.strptime(fechaHasta, '%Y-%d-%m')
 
                 if fechaquepublica < fechaDesde1 or fechaquepublica > fechaHasta1:
                     avisosQueSeFacturanYNoSePublican.append(data)
@@ -4307,15 +4349,16 @@ def formAvisosPublicadosFacturados(request):
                 totalSinImpuestosAvisosQueSeFacturanYSePublican += data['importeSinImpuestoPorDia']
 
             listaAux = []
-            listaAux.append(dict(concepto='Avisos que se Facturan y se Publican', total=totalSinImpuestosAvisosQueSeFacturanYSePublican))
-            listaAux.append(dict(concepto='Avisos que se Facturan y NO se Publican *', total=totalSinImpuestosAvisosQueSeFacturanYNoSePublican))
+            listaAux.append(dict(concepto='Avisos que se Facturan y se Publican',
+                                 total=totalSinImpuestosAvisosQueSeFacturanYSePublican))
+            listaAux.append(dict(concepto='Avisos que se Facturan y NO se Publican *',
+                                 total=totalSinImpuestosAvisosQueSeFacturanYNoSePublican))
 
             listaAux.append(dict(concepto='', total=0))
-            listaAux.append(dict(concepto='Total', total=totalSinImpuestosAvisosQueSeFacturanYNoSePublican+totalSinImpuestosAvisosQueSeFacturanYSePublican))
-
+            listaAux.append(dict(concepto='Total',
+                                 total=totalSinImpuestosAvisosQueSeFacturanYNoSePublican + totalSinImpuestosAvisosQueSeFacturanYSePublican))
 
             request.session['lista_resultados'] = listaAux
-
 
             request.session['titulo'] = 'Avisos Facturados y Publicados'
             request.session['fechaDesde'] = fechaDesdeModoLatino
@@ -4324,44 +4367,52 @@ def formAvisosPublicadosFacturados(request):
             ############### Variables para el Excel ####################
             request.session['data'] = avisosQueSeFacturanYSePublican + avisosQueSeFacturanYNoSePublican
 
+            request.session['keys'] = ['CodigoAviso', 'FechaAviso', 'FechaPublicacion', 'Nodo', 'Referencia', 'Alto',
+                                       'Ancho', 'TotalCm',
+                                       'Tarifa', 'ImporteBruto', 'DescuentoaMano', 'Descuentos', 'RecargoColor',
+                                       'RecargoLogo',
+                                       'ImporteSinImpuestos', 'NroPedido', 'TipoComprobante', 'Letra', 'NroFactura',
+                                       'CondicionVenta',
+                                       'TotalFacturaSinImpuestos', 'FechaQuePublica', 'PrecioXDia2',
+                                       'importeSinImpuestoPorDia']
 
-
-            request.session['keys'] = ['CodigoAviso', 'FechaAviso', 'FechaPublicacion', 'Nodo', 'Referencia', 'Alto', 'Ancho', 'TotalCm',
-                                       'Tarifa',	'ImporteBruto', 'DescuentoaMano', 'Descuentos', 'RecargoColor',	'RecargoLogo',
-                                       'ImporteSinImpuestos', 'NroPedido', 'TipoComprobante', 'Letra', 'NroFactura', 'CondicionVenta',
-                                       'TotalFacturaSinImpuestos', 'FechaQuePublica', 'PrecioXDia2','importeSinImpuestoPorDia']
-
-            request.session['headers'] = ['Cod Aviso', 'Fecha Aviso', 'Fecha Publicacion', 'Nodo', 'Referencia', 'Alto', 'Ancho', 'Total Cms',
-                                       'Tarifa',	'Importe Bruto', 'Descuento a Mano', 'Descuentos', 'Recargo Color',	'Recargo Logo',
-                                       'Importe sin Impuestos', 'Nro Pedido', 'Tipo Comprobante', 'Letra', 'Nro Factura', 'Condicion Venta',
-                                       'Total Factura sin Impuestos', 'Fecha que Publica', 'Precio x Dia', 'Imp Sin Impuesto Por Dia']
+            request.session['headers'] = ['Cod Aviso', 'Fecha Aviso', 'Fecha Publicacion', 'Nodo', 'Referencia', 'Alto',
+                                          'Ancho', 'Total Cms',
+                                          'Tarifa', 'Importe Bruto', 'Descuento a Mano', 'Descuentos', 'Recargo Color',
+                                          'Recargo Logo',
+                                          'Importe sin Impuestos', 'Nro Pedido', 'Tipo Comprobante', 'Letra',
+                                          'Nro Factura', 'Condicion Venta',
+                                          'Total Factura sin Impuestos', 'Fecha que Publica', 'Precio x Dia',
+                                          'Imp Sin Impuesto Por Dia']
 
             listaGrafico = []
-            porcAvisosNoPub,porcAvisosPub = 0,0
-            if totalSinImpuestosAvisosQueSeFacturanYNoSePublican+totalSinImpuestosAvisosQueSeFacturanYSePublican != 0:
-                porcAvisosNoPub = (totalSinImpuestosAvisosQueSeFacturanYNoSePublican * 100)/(totalSinImpuestosAvisosQueSeFacturanYNoSePublican+totalSinImpuestosAvisosQueSeFacturanYSePublican)
-                porcAvisosPub = (totalSinImpuestosAvisosQueSeFacturanYSePublican * 100)/(totalSinImpuestosAvisosQueSeFacturanYNoSePublican+totalSinImpuestosAvisosQueSeFacturanYSePublican)
+            porcAvisosNoPub, porcAvisosPub = 0, 0
+            if totalSinImpuestosAvisosQueSeFacturanYNoSePublican + totalSinImpuestosAvisosQueSeFacturanYSePublican != 0:
+                porcAvisosNoPub = (totalSinImpuestosAvisosQueSeFacturanYNoSePublican * 100) / (
+                    totalSinImpuestosAvisosQueSeFacturanYNoSePublican + totalSinImpuestosAvisosQueSeFacturanYSePublican)
+                porcAvisosPub = (totalSinImpuestosAvisosQueSeFacturanYSePublican * 100) / (
+                    totalSinImpuestosAvisosQueSeFacturanYNoSePublican + totalSinImpuestosAvisosQueSeFacturanYSePublican)
 
-            listaGrafico.append(dict(nombre='Avisos Facturados y No Publicados', porc = porcAvisosNoPub))
-            listaGrafico.append(dict(nombre='Avisos Facturados y Publicados', porc = porcAvisosPub))
+            listaGrafico.append(dict(nombre='Avisos Facturados y No Publicados', porc=porcAvisosNoPub))
+            listaGrafico.append(dict(nombre='Avisos Facturados y Publicados', porc=porcAvisosPub))
 
             listaGrafico = json.dumps(listaGrafico, cls=DjangoJSONEncoder)
 
             return render_to_response('reportesFacturas/facturasPublicadas/AvisosFacturadosYPublicados.html',
-                                    {'tit':'Avisos Facturados y Publicados',
-                                     'fechaDesde':fechaDesdeModoLatino,
-                                      'fechaHasta':fechaHastaModoLatino,
-                                     'listaGrafico': listaGrafico},
+                                      {'tit': 'Avisos Facturados y Publicados',
+                                       'fechaDesde': fechaDesdeModoLatino,
+                                       'fechaHasta': fechaHastaModoLatino,
+                                       'listaGrafico': listaGrafico},
                                       context_instance=RequestContext(request))
     else:
         formulario = formPromociones()
 
-    return render_to_response('reportesFacturas/facturasPublicadas/formAvisosFacturadosYPublicados.html', {'formulario': formulario},
+    return render_to_response('reportesFacturas/facturasPublicadas/formAvisosFacturadosYPublicados.html',
+                              {'formulario': formulario},
                               context_instance=RequestContext(request))
 
 
 def formFacturasMensuales(request):
-
     if request.method == 'POST':
         formulario = formPromociones(request.POST)
 
@@ -4387,18 +4438,19 @@ def formFacturasMensuales(request):
             request.session['fechaDesde'] = fechaDesdeModoLatino
             request.session['fechaHasta'] = fechaHastaModoLatino
 
-            cursor.execute("select NroAviso,ImporteSinImpuestos,NombreCliente," #FechaFactura,
-                           "TipoComprobante,NroFactura,CondicionVenta,NroPedido,Letra, Comentario" #Comentario esta por las refacturas
-                           " from viewfacturasSDCLASS where FechaFactura between %s and %s",(fechaDesde, fechaHasta))
+            cursor.execute("select NroAviso,ImporteSinImpuestos,NombreCliente,"  # FechaFactura,
+                           "TipoComprobante,NroFactura,CondicionVenta,NroPedido,Letra, Comentario"  #Comentario esta por las refacturas
+                           " from viewfacturasSDCLASS where FechaFactura between %s and %s", (fechaDesde, fechaHasta))
 
             listaSDCLASS = dictfetchall(cursor)
 
-            cursor2.execute("select desc1,NroFactura,TipoComprobante,NombreCliente,"#FechaFactura,
-                            "CondicionVenta,Letra,NroPedido,ImporteSinImpuestos, Comentario" #
-                            " from viewfacturasNOSDCLASS where FechaFactura between %s and %s",(fechaDesde, fechaHasta))
+            cursor2.execute("select desc1,NroFactura,TipoComprobante,NombreCliente,"  # FechaFactura,
+                            "CondicionVenta,Letra,NroPedido,ImporteSinImpuestos, Comentario"  #
+                            " from viewfacturasNOSDCLASS where FechaFactura between %s and %s",
+                            (fechaDesde, fechaHasta))
 
             listaNOSDCLASS = dictfetchall(cursor2)
-            #print fechaHasta, fechaDesde, listaNOSDCLASS
+            # print fechaHasta, fechaDesde, listaNOSDCLASS
 
             listaAuxiliar = itertools.chain(listaSDCLASS, listaNOSDCLASS)
             listaFinal, lista_resumida = [], []
@@ -4410,7 +4462,7 @@ def formFacturasMensuales(request):
                         nro_aviso_anterior = i['NroAviso']
                         i['identificador'] = 'Publicidad'
                         i['descripcion'] = i.pop('NroAviso')
-                        if i['TipoComprobante']=='Nota Credito':
+                        if i['TipoComprobante'] == 'Nota Credito':
                             total_publicidad = total_publicidad - i['ImporteSinImpuestos']
                         else:
                             total_publicidad = total_publicidad + i['ImporteSinImpuestos']
@@ -4421,22 +4473,22 @@ def formFacturasMensuales(request):
                 if 'desc1' in i.keys():
 
                     if (i['NombreCliente'] == u'Fideicomiso Adm.de Pautas Pub.ofic') \
-                       or (i['NombreCliente'] == u'LOTERIA CHAQUENA') \
-                       or (i['NombreCliente'] == u'Ministerio de Justicia de Corrientes') \
-                       or (i['NombreCliente'] == u'Relevamientos Catastrales S.A./Ex-SyK') \
-                       or (i['NombreCliente'] == u'Municip. de Saenz Pena') \
-                       or (i['NombreCliente'] == u'Jef. De Gabinete Minist Sec M.c.'):
+                            or (i['NombreCliente'] == u'LOTERIA CHAQUENA') \
+                            or (i['NombreCliente'] == u'Ministerio de Justicia de Corrientes') \
+                            or (i['NombreCliente'] == u'Relevamientos Catastrales S.A./Ex-SyK') \
+                            or (i['NombreCliente'] == u'Municip. de Saenz Pena') \
+                            or (i['NombreCliente'] == u'Jef. De Gabinete Minist Sec M.c.'):
                         i['identificador'] = 'Publicidad'
                         i['descripcion'] = i.pop('desc1')
-                        if (i['TipoComprobante']=='Nota Credito'):
-                             total_publicidad = total_publicidad - i['ImporteSinImpuestos']
+                        if (i['TipoComprobante'] == 'Nota Credito'):
+                            total_publicidad = total_publicidad - i['ImporteSinImpuestos']
                         else:
-                             total_publicidad = total_publicidad + i['ImporteSinImpuestos']
+                            total_publicidad = total_publicidad + i['ImporteSinImpuestos']
                     else:
                         i['identificador'] = 'No Publicidad'
-                        i['descripcion'] = i.pop('desc1') #u'desc1'
+                        i['descripcion'] = i.pop('desc1')  #u'desc1'
 
-                        if (i['TipoComprobante']=='Nota Credito'):
+                        if (i['TipoComprobante'] == 'Nota Credito'):
                             total_no_publicidad = total_no_publicidad - i['ImporteSinImpuestos']
                         else:
                             total_no_publicidad = total_no_publicidad + i['ImporteSinImpuestos']
@@ -4444,37 +4496,44 @@ def formFacturasMensuales(request):
                 listaFinal.append(i)
 
             facturacion_total = total_publicidad + total_no_publicidad
-            porcentaje_publicidad = (total_publicidad/facturacion_total) * 100
-            porcentaje_no_publicidad = (total_no_publicidad/facturacion_total) * 100
+            porcentaje_publicidad = (total_publicidad / facturacion_total) * 100
+            porcentaje_no_publicidad = (total_no_publicidad / facturacion_total) * 100
 
-            lista_resumida = [{'FuenteIngreso':'Publicidad', 'ImportesinImpuestos': total_publicidad},
-                {'FuenteIngreso':'No Publicidad', 'ImportesinImpuestos': total_no_publicidad},
-                {'FuenteIngreso':' ', 'ImportesinImpuestos': ' '},
-                {'FuenteIngreso':'Total', 'ImportesinImpuestos': facturacion_total}]
-            lista_para_grafico = [{'nombre': 'Publicidad', 'porcentaje':porcentaje_publicidad},
-                                  {'nombre': 'No Publicidad', 'porcentaje':porcentaje_no_publicidad}]
+            lista_resumida = [{'FuenteIngreso': 'Publicidad', 'ImportesinImpuestos': total_publicidad},
+                              {'FuenteIngreso': 'No Publicidad', 'ImportesinImpuestos': total_no_publicidad},
+                              {'FuenteIngreso': ' ', 'ImportesinImpuestos': ' '},
+                              {'FuenteIngreso': 'Total', 'ImportesinImpuestos': facturacion_total}]
+            lista_para_grafico = [{'nombre': 'Publicidad', 'porcentaje': porcentaje_publicidad},
+                                  {'nombre': 'No Publicidad', 'porcentaje': porcentaje_no_publicidad}]
             tit = 'Facturas de Publicidad y No Publicidad'
 
             #########   Variables para Excel    ################################
-            request.session['data']= listaFinal
+            request.session['data'] = listaFinal
 
-            request.session['keys'] = ["NroPedido", "NroFactura", "Letra", "NombreCliente", "CondicionVenta", "identificador", "ImporteSinImpuestos", "descripcion", "Comentario", "TipoComprobante"]
+            request.session['keys'] = ["NroPedido", "NroFactura", "Letra", "NombreCliente", "CondicionVenta",
+                                       "identificador", "ImporteSinImpuestos", "descripcion", "Comentario",
+                                       "TipoComprobante"]
 
-            request.session['headers'] = ["Nro Pedido", "Nro Factura", "Letra", "Nombre Cliente", "CondicionVenta", "Identificador", "Importe sin Impuestos", "Descripcion", "Comentario", "Tipo Comprobante"]
+            request.session['headers'] = ["Nro Pedido", "Nro Factura", "Letra", "Nombre Cliente", "CondicionVenta",
+                                          "Identificador", "Importe sin Impuestos", "Descripcion", "Comentario",
+                                          "Tipo Comprobante"]
 
             request.session['titulo'] = tit
             #########################################################
 
             lista_resumida = json.dumps(lista_resumida, cls=DjangoJSONEncoder)
-            return render_to_response('reportesFacturas/facturasTotales/facturasMensuales.html',{'fechaDesde':fechaDesdeModoLatino, 'tit':tit, 'listaFacturacion':lista_resumida,
-                                                                                 'fechaHasta':fechaHastaModoLatino, 'listaGrafico':lista_para_grafico},
-                context_instance=RequestContext(request))
+            return render_to_response('reportesFacturas/facturasTotales/facturasMensuales.html',
+                                      {'fechaDesde': fechaDesdeModoLatino, 'tit': tit,
+                                       'listaFacturacion': lista_resumida,
+                                       'fechaHasta': fechaHastaModoLatino, 'listaGrafico': lista_para_grafico},
+                                      context_instance=RequestContext(request))
 
     else:
         formulario = formPromociones()
 
     return render_to_response('reportesFacturas/facturasTotales/formFacturasMensuales.html', {'formulario': formulario},
                               context_instance=RequestContext(request))
+
 
 @user_passes_test(grupo_check)
 def formCapturadoresIva(request):
@@ -4488,16 +4547,18 @@ def formCapturadoresIva(request):
             codRemoto = formulario.cleaned_data['codRemoto']
             if codRemoto == u'1':
                 request.session['codigoRemoto'] = 'Chaco'
+
             else:
                 request.session['codigoRemoto'] = 'Corrientes'
-
+            codigoremoto = request.session['codigoRemoto']
 
             dia = formulario.cleaned_data['hoy']
             if dia == u'1':
                 fechaDesde = time.strftime('%Y-%d-%m')
                 # facu aca hay que obtener el día de hoy y sumarle uno, lo mismo para fechaHasta si ingresa con uiquery.
-                fechaHasta = datetime.date()  + timedelta(days=1)
-                print (fechaHasta.strftime('%Y-%d-%m'))
+                fechaHasta = time.strftime('%Y-%d-%m')
+                fechaDesdeModoLatino = time.strftime('%d/%m/%Y')
+                fechaHastaModoLatino = fechaDesdeModoLatino
             else:
                 fechaDesde = formulario.cleaned_data['fechaDesde']
                 df = DateFormat(fechaDesde)
@@ -4510,42 +4571,38 @@ def formCapturadoresIva(request):
                 fechaHasta = df.format('Y-d-m')
                 fechaHastaModoLatino = df.format('d/m/Y')
 
-                df = DateFormat(formulario.cleaned_data['fechaHasta'] + timedelta(days=1))
+                df = DateFormat(formulario.cleaned_data['fechaHasta'])
                 fechaHasta = df.format('Y-d-m')
                 # print fechaHasta
 
             request.session['fechaDesde'] = fechaDesdeModoLatino
             request.session['fechaHasta'] = fechaHastaModoLatino
 
-            cursor.execute("select * from EstadisticasAvisosConTasaIVA(%s,%s,%s)",(fechaDesde, fechaHasta, codRemoto))
+            cursor.execute("select * from EstadisticasAvisosConTasaIVA(%s,%s,%s)", (fechaDesde, fechaHasta, codRemoto))
             listaBruta = dictfetchall(cursor)
 
             listaIvaIncorrecto, listaIva = [], []
             for data in listaBruta:
-                if data['TASAIVA'] == 10.5 or data['TASAIVA'] == 21.0:
+                data['nombre'] = data['nombre'].replace(' ','')
+                if data['TasaIVA'] == 10.5 or data['TasaIVA'] == 21.0:
+                    data.update({'verifica': 'Correctos'})
                     listaIva.append(data)
                 else:
+                    data.update({'verifica': 'Incorrectos'})
                     listaIvaIncorrecto.append(data)
-            resultado = transformacionGenerica(data)
 
             tit = 'Control Tasa de IVA de Avisos'
-
-
-
-            #########   Variables para Excel    ################################
-            request.session['data']= listaIva + listaIvaIncorrecto
-
-            request.session['keys'] = ["NroPedido", "NroFactura", "Letra", "NombreCliente", "CondicionVenta", "identificador", "ImporteSinImpuestos", "descripcion", "Comentario", "TipoComprobante"]
-
-            request.session['headers'] = ["Nro Pedido", "Nro Factura", "Letra", "Nombre Cliente", "CondicionVenta", "Identificador", "Importe sin Impuestos", "Descripcion", "Comentario", "Tipo Comprobante"]
-
+            request.session['data'] = listaIva + listaIvaIncorrecto
             request.session['titulo'] = tit
 
-            #########################################################
+            print request.session['data']
 
             # lista_resumida = json.dumps(lista_resumida, cls=DjangoJSONEncoder)
-            return render_to_response('reportesFacturas/facturasTotales/facturasMensuales.html',{'fechaDesde':fechaDesdeModoLatino},
-                context_instance=RequestContext(request))
+            return render_to_response('CapturadoresIva/capturadoresIVA.html', {'tit': tit,
+                                                                               'fechaDesde': fechaDesdeModoLatino,
+                                                                               'fechaHasta': fechaHastaModoLatino,
+                                                                               'codigoRemoto': codigoremoto},
+                                      context_instance=RequestContext(request))
 
     else:
         formulario = formVentasCaptura()
