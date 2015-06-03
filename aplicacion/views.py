@@ -305,10 +305,18 @@ def grupo_check(user, gr=[]):
     # print(GruposLoguin.objects.all())
     var = GruposLoguin.objects.all()
     if hasattr(user, 'ldap_user'):
-        if hasattr(user,'attrs["memberof"]'):
+
+        try:
             nombreGrupo = user.ldap_user.attrs['memberof'][0]
-        else:
-            nombreGrupo = user.ldap_user.dn
+        except:
+            nombreGrupo = user.ldap_user.attrs['distinguishedname'][0]
+
+        # usuarioldap = user.ldap_user
+        # if hasattr(usuarioldap,"attrs"):
+        #     nombreGrupo = user.ldap_user.attrs['memberof'][0]
+        # else:
+        #     nombreGrupo = user.ldap_user.dn
+
         nombreGrupo = nombreGrupo.replace(' ', '')
     else:
         return True
