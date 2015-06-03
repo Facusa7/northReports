@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+
+
+{% block exportacion %}
+
+   <div id="exportacion">
+
+
+       <a href="javascript:void(0)" title="Imprimir Reporte" onclick="printPage()"><img src="{{STATIC_URL}}images/Print-icon.png"></a>
+
+      <!--<a href="/exportarAPdf" title="Ver Reporte en PDF" target="_blank"><img src="{{STATIC_URL}}images/pdf-ico.png"></a>-->
+
+       <a href="/exportarAXls" title="Descargar Reporte en Excel" target="_blank" ><img src="{{STATIC_URL}}images/microsoft-excel.png"></a>
+
+
+       <a href="javascript:void(0)" title="Ver Gr&aacute;fico con las distintas promociones" onclick="mostrarGraficoPromociones()"><img src="{{STATIC_URL}}images/chart.png"></a>
+
+   </div>
+
+ {% endblock %}
+
+
+{%block contenido  %}
+
+    <style type="text/css">
+            .container{
+                margin-left: 0px;
+                margin-top: 0px;
+            }
+            .ui-jqgrid .ui-jqgrid-view {
+                font-size: 13px;
+            }
+            .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 20px;
+            }
+
+            .ui-widget-content .rowClass { color: blue;  background-image: none; font-size:16px; !important;}
+
+            #promocionSinResumir .ui-jqgrid-view  {
+               font-size: 14px !important;
+            }
+
+            #promocionSinResumir .ui-jqgrid .ui-jqgrid-htable th div {
+                 height: 22px;
+            }
+    </style>
+
+
+{% if fechaDesde ==  fechaHasta%}
+    <h3>{{tit}} de {{fechaHasta}} del {{codigoRemoto}}  </h3>
+
+{% else %}
+    <h3>{{tit}} desde {{fechaDesde}} hasta {{fechaHasta}} de {{codigoRemoto}}  </h3>
+
+{% endif %}
+
+
+
+<input type="text" id="tit" style="display:none" value={{titulo}} />
+
+<main id="centroGrid">
+<div id='promocionSinResumir' align="center">
+
+    <table id="list" class="gridTotales"></table>
+        <table id="gridpager" class="scroll" style="text-align: center;"> </table>
+</div>
+
+<!--<div id='cuentaCorrienteAgrupadoPor' style="display:none;" align="center">-->
+
+    <!--<table id="listXAviso" class="gridTotales"></table>-->
+<!--</div>-->
+    <!--<div id="result" align="center"></div>-->
+
+
+</main>
+<script type="text/javascript">
+  //$(document).ready(function(){
+    var agrupacion = $('#agrupacion').val();
+    var tit = $('#tit').val();
+
+
+    $("#list").jqGrid({
+    url:'/json_CapturadoresIva/',
+    datatype: 'json',
+    mtype: 'GET',
+    colNames:
+    ["Ag Cliente", "Cod Aviso", "Aviso", "centimetros", "Valor sin Impuestos", "OrdenPublicidad", "nombre", "TasaIVA", "NombreUsuario", 'revision'],
+    colModel :[
+      {name:'AgenciaCliente',index:'AgenciaCliente', width:200},
+      {name:'CodigoAviso',index:'CodigoAviso', width:100},
+      {name:'Aviso',index:'Aviso', width:230
+
+{#        cellattr: function (rowId, tv, rawObject, cm, rdata){#}
+{#            if (rawObject != null){#}
+{#                listaauxiliar.push(rawObject);#}
+{#                codigoAvisoAuxiliar = rawObject.CodigoAviso;#}
+{#                return ' onclick ="mostrarDetalleFila(event,' + '\'' +codigoAvisoAuxiliar + '\'' + ')" title="Click para ver detalles del aviso"  style="color:blue; cursor: pointer;" ';#}
+{#            }#}
+{#        }#}
+      },
+      {name:'centimetros',index:'centimetros', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+      {name:'ValorSinImpuestos',index:'ValorSinImpuestos', align:"right",sorttype:'number',formatter: currencyFmatter2, summaryType:'sum', width:100},
+      {name:'OrdenPublicidad',index:'OrdenPublicidad', width:100},
+      {name:'nombre',index:'nombre', width:100},
+      {name:'TasaIVA',index:'TasaIVA', align:"right",sorttype:'number',formatter: currencyFmatter2, width:100},
+      {name:'NombreUsuario',index:'NombreUsuario', width:150},
+      {name:'revision',index:'revision', width:50}
+    ],
+    rowNum:-1,
+    height: 'auto',
+    pager: $('#gridpager'),
+
+    sortorder: 'desc',
+    viewrecords: true,
+{#    grouping: true,#}
+{#        groupingView :  {#}
+{#        groupField : ['verifica'],#}
+{#        groupColumnShow : [true],#}
+{#        groupText : ['<b>{0}</b>'],#}
+{#        groupCollapse : true,#}
+{#        groupOrder: ['asc'],#}
+{#        groupSummary : [true],#}
+{#        showSummaryOnHide: true,#}
+{#        groupDataSorted : true },#}
+     footerrow: true,
+     userDataOnFooter: true,
+     caption: 'Control de Tasa de IVA'
+
+  });
+
+
+
+function currencyFmatter2 (cellvalue, options, rowObject)
+{
+   if (cellvalue == 0) {
+        return '--';
+   }else {
+       return parseFloat(Math.round(cellvalue * 100) / 100).toFixed(2);
+   }
+
+}
+
+
+jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
+
+
+
+
+</script>
+
+
+{% block grafico %}
+
+
+<script src="{{STATIC_URL}}js/highcharts.js"></script>
+<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
+<script src="{{STATIC_URL}}js/modules/exporting.js"></script>
+
+  <center>
+
+   <div align="center" style="margin-top:3%; width:70%;background-color: #fff;" id="graficoPromociones"></div>
+</center>
+{% endblock %}
+
+
+    {% block navegacion %}
+        <div id="navegacion">
+
+                <a id ='btnVariable' href="/listaPromociones/">Volver</a>
+
+
+
+        </div>
+
+    {% endblock %}
+
+
+
+
+
+
+{% endblock %}
+

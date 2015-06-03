@@ -64,66 +64,68 @@
             <!-- Navigation -->
             {% block menu %}
                 {% if user.username != '' %}
-                    <ul id="menu" class="dropdown dropdown-horizontal">
-                        <li><a href="/">Inicio</a></li>
+                    {% if user.ldap_user == None or 'departamento sistemas' in user.ldap_user.dn %}
+                        <ul id="menu" class="dropdown dropdown-horizontal">
+                            <li><a href="/">Inicio</a></li>
 
-                        <li><a href="/menuReportesEstadisticos/" class="dir">Reportes Estad&iacute;sticos</a>
-                            <ul class="subIndice">
-                                <li><a href="/reportesFormasDePago/">Reportes seg&uacute;n Formas de Pago</a></li>
-                                <li><a href="/ventasMensuales">Reportes de Ventas Mensuales</a>
-                                    <ul style="margin-left:8px; margin-top:-0.6%;" class="subIndice">
-                                        <li><a style="width: 320px;" href="/detalleCmsVendidosyCedidos/">Detalles de Cent&iacute;metros Vendidos y/o Cedidos</a></li>
-
-
-                                        <li><a style="width: 320px;" href="/detalleRecargosyDescuentos">Detalle de Recargos y Descuentos</a></li>
-
-                                    </ul>
-
-                                </li>
-                                <li><a href="/formVentaNetaAnual">Ventas Netas Anuales de Publicidad</a></li>
-                            </ul>
-                        </li>
-                        <li><a href="/promociones/formPromociones" class="dir">Reportes de Promociones/Convenios</a>
-                            <ul id="Mpromociones" class="subIndice">
-                                <li><a href="/grupoPromocion/0">Todas las Promociones</a></li>
-                                <li><a href="/grupoPromocion/1">2 publicaciones = 1 sin cargo</a></li>
-                                <li><a href="/grupoPromocion/2">3 publicaciones = 1 sin cargo</a></li>
-                                <li><a href="/grupoPromocion/3">3 publicaciones = 1 sin cargo [2x2]</a></li>
-                                <li><a href="/grupoPromocion/4">4 o más días = 50% Descuento</a></li>
-                                <li><a href="/grupoPromocion/5">5 publicaciones = 1 sin cargo</a></li>
-                                <li><a href="/grupoPromocion/6">7 publicaciones = 3 sin cargo</a></li>
-                                <li><a href="/grupoPromocion/7">Agencias Publican 3 = 1 sin cargo</a></li>
-                                <li><a href="/grupoPromocion/8">Promo Agencia y Cliente</a></li>
-                                <li><a href="/grupoPromocion/9">C&aacute;mara de Automotores</a></li>
-                                <li><a href="/grupoPromocion/A">C&aacute;mara Inmobiliaria</a></li>
-                                <li><a href="/grupoPromocion/B">Sin Promoci&oacute;n</a></li>
-                                <li><a href="/grupoPromocion/D">Convenios</a></li>
-
-                            </ul>
+                            <li><a href="/menuReportesEstadisticos/" class="dir">Reportes Estad&iacute;sticos</a>
+                                <ul class="subIndice">
+                                    <li><a href="/reportesFormasDePago/">Reportes seg&uacute;n Formas de Pago</a></li>
+                                    <li><a href="/ventasMensuales">Reportes de Ventas Mensuales</a>
+                                        <ul style="margin-left:8px; margin-top:-0.6%;" class="subIndice">
+                                            <li><a style="width: 320px;" href="/detalleCmsVendidosyCedidos/">Detalles de Cent&iacute;metros Vendidos y/o Cedidos</a></li>
 
 
+                                            <li><a style="width: 320px;" href="/detalleRecargosyDescuentos">Detalle de Recargos y Descuentos</a></li>
 
-                        </li>
-                        <li><a href="/ventasDiayHora/formVentasCaptura" class="dir">Ventas por Día y Hora</a>
-                            <ul class="subIndice">
-                                <li><a href="/ventasDiayHora/capturaDiayHora/0">Ventas por Dia</a></li>
+                                        </ul>
 
-                                <li><a href="/ventasDiayHora/capturaDiayHora/1">Ventas por Hora</a></li>
+                                    </li>
+                                    <li><a href="/formVentaNetaAnual">Ventas Netas Anuales de Publicidad</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="/promociones/formPromociones" class="dir">Reportes de Promociones/Convenios</a>
+                                <ul id="Mpromociones" class="subIndice">
+                                    <li><a href="/grupoPromocion/0">Todas las Promociones</a></li>
+                                    <li><a href="/grupoPromocion/1">2 publicaciones = 1 sin cargo</a></li>
+                                    <li><a href="/grupoPromocion/2">3 publicaciones = 1 sin cargo</a></li>
+                                    <li><a href="/grupoPromocion/3">3 publicaciones = 1 sin cargo [2x2]</a></li>
+                                    <li><a href="/grupoPromocion/4">4 o más días = 50% Descuento</a></li>
+                                    <li><a href="/grupoPromocion/5">5 publicaciones = 1 sin cargo</a></li>
+                                    <li><a href="/grupoPromocion/6">7 publicaciones = 3 sin cargo</a></li>
+                                    <li><a href="/grupoPromocion/7">Agencias Publican 3 = 1 sin cargo</a></li>
+                                    <li><a href="/grupoPromocion/8">Promo Agencia y Cliente</a></li>
+                                    <li><a href="/grupoPromocion/9">C&aacute;mara de Automotores</a></li>
+                                    <li><a href="/grupoPromocion/A">C&aacute;mara Inmobiliaria</a></li>
+                                    <li><a href="/grupoPromocion/B">Sin Promoci&oacute;n</a></li>
+                                    <li><a href="/grupoPromocion/D">Convenios</a></li>
 
-                            </ul>
+                                </ul>
 
-                        </li>
-                        <li><a href="javascript:void(0)" class="dir">Consumos de Papel</a></li>
-                        <li><a href="/reportesVendedor/formVentasVendedor" class="dir">Avisos por Vendedor</a>
-                            <ul class="subIndice">
-                                <li><a href="/reportesVendedor/ventasVendedorPorHora">Ventas de Vendedor por Hora</a></li>
 
-                                <li><a href="/reportesVendedor/ventasVendedorPorFormaPago">Ventas de Vendedor por Forma de Pago</a></li>
 
-                            </ul>
+                            </li>
+                            <li><a href="/ventasDiayHora/formVentasCaptura" class="dir">Ventas por Día y Hora</a>
+                                <ul class="subIndice">
+                                    <li><a href="/ventasDiayHora/capturaDiayHora/0">Ventas por Dia</a></li>
 
-                        </li>
-                    </ul>
+                                    <li><a href="/ventasDiayHora/capturaDiayHora/1">Ventas por Hora</a></li>
+
+                                </ul>
+
+                            </li>
+                            <li><a href="javascript:void(0)" class="dir">Consumos de Papel</a></li>
+                            <li><a href="/reportesVendedor/formVentasVendedor" class="dir">Avisos por Vendedor</a>
+                                <ul class="subIndice">
+                                    <li><a href="/reportesVendedor/ventasVendedorPorHora">Ventas de Vendedor por Hora</a></li>
+
+                                    <li><a href="/reportesVendedor/ventasVendedorPorFormaPago">Ventas de Vendedor por Forma de Pago</a></li>
+
+                                </ul>
+
+                            </li>
+                        </ul>
+                    {% endif %}
                 {% endif %}
             {% endblock %}
 
