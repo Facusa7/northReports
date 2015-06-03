@@ -8,13 +8,15 @@ from aplicacion.views import json_test, json_testA, json_testGrupo, json_totales
     viewFormVentasCaptura, capturaDiayHora, listaDiayHora, jsonTotalVendedorxHora, \
     listaVentasPorVendedor, formVentasVendedor, ventasVendedorPorHora, ajaxVendedorHoraFormasDePago, \
     jsonTotalVendedorxHoraAjax, ventasVendedorPorFormaPago, json_AvisosFacturadosYPublicados, formAvisosPublicadosFacturados, \
-    formFacturasMensuales, formCapturadoresIva, jsonCapturadoresIva
+    formFacturasMensuales, formCapturadoresIva, jsonCapturadoresIva, inicioReportes
 
 admin.autodiscover()
 
 urlpatterns = patterns('',
 
         url(r'^$',inicio),
+
+        url(r'^inicioReportes/',inicioReportes),
 
         url(r'^loginView/','aplicacion.views.loginView'), #, {'template_name':'inicio/index.html'}
 

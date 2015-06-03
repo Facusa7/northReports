@@ -64,10 +64,10 @@
             <!-- Navigation -->
             {% block menu %}
                 {% if user.username != '' %}
-                    {% if user.ldap_user == None or 'departamento sistemas' in user.ldap_user.dn %}
-                        <ul id="menu" class="dropdown dropdown-horizontal">
-                            <li><a href="/">Inicio</a></li>
 
+                    <ul id="menu" class="dropdown dropdown-horizontal">
+                            <li><a href="/">Inicio</a></li>
+                          {% if user.ldap_user == None or 'Departamento Sistemas' in user.ldap_user.dn %}
                             <li><a href="/menuReportesEstadisticos/" class="dir">Reportes Estad&iacute;sticos</a>
                                 <ul class="subIndice">
                                     <li><a href="/reportesFormasDePago/">Reportes seg&uacute;n Formas de Pago</a></li>
@@ -124,8 +124,9 @@
                                 </ul>
 
                             </li>
-                        </ul>
-                    {% endif %}
+                          {% endif %}
+                    </ul>
+
                 {% endif %}
             {% endblock %}
 
@@ -522,18 +523,6 @@ $(document).ready(function(){
 
 </script>
 
-<div>
-    <script type="text/javascript"><!--
-        google_ad_client = "pub-5586981122800176";
-        //728x90, creado 2/01/08
-        google_ad_slot = "6081869238";
-        google_ad_width = 728;
-        google_ad_height = 90;
-    //--></script>
-    <script type="text/javascript"
-        src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
-    </script>
-</div>
 
 <div class="shadow"></div>
 <div id="flotante" class="enviarCorreo">

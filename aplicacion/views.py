@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate, login
 
 import math
 import operator
+from django.contrib.auth.views import redirect_to_login
 from django.core.mail import EmailMessage
 from django.core.serializers.json import DjangoJSONEncoder
 import itertools
@@ -45,11 +46,55 @@ from reportesNorte.settings import STATIC_URL, MEDIA_URL, MEDIA_ROOT, IMAGEN_EXC
 def inicio(request):
     if request.user.is_authenticated():
         inicializarVariables(request)
-        return render_to_response('menuPrincipal.html', context_instance=RequestContext(request))
+        user = request.session['userID']
+        grupo = []
+        if grupo_check(user, grupo):
+            return render_to_response('main.html',{'grupo':grupo},
+                                      context_instance=RequestContext(request))
+        else:
+            return redirect_to_login(loginView)
     else:
         return loginView(request)
 
+def grupo_check(user, gr=[]):
+    # print(GruposLoguin.objects.all())
+    var = GruposLoguin.objects.all()
+    if hasattr(user, 'ldap_user'):
 
+        try:
+            nombreGrupo = user.ldap_user.attrs['memberof'][0]
+        except:
+            nombreGrupo = user.ldap_user.attrs['distinguishedname'][0]
+
+        # usuarioldap = user.ldap_user
+        # if hasattr(usuarioldap,"attrs"):
+        #     nombreGrupo = user.ldap_user.attrs['memberof'][0]
+        # else:
+        #     nombreGrupo = user.ldap_user.dn
+
+        nombreGrupo = nombreGrupo.replace(' ', '')
+    else:
+        gr.append('todo')
+        return True
+
+    # for property, value in vars(user.ldap_user).iteritems():
+    #     print property, ": ", value
+
+    for grupo in var:
+
+        grupoAux = grupo.nombre.replace(' ', '')
+        if grupoAux in nombreGrupo:
+            gr.append(grupo.nombre)
+            return True
+
+    return False
+
+@user_passes_test(grupo_check)
+@login_required
+def inicioReportes(request):
+    return render_to_response('menuPrincipal.html', context_instance=RequestContext(request))
+
+@user_passes_test(grupo_check)
 @login_required
 def menuReportesEstadisticos(request):
     request.session['titulo'] = 0  # Esto es para que el "volver" de ventas mensuales permita cargar de nuevo el FORM
@@ -142,6 +187,7 @@ def transformacionGenerica(data):
     return resultado
 
 
+@user_passes_test(grupo_check)
 @login_required
 def reportesFormasDePago(request):
     try:
@@ -296,42 +342,10 @@ def reportesFormasDePago(request):
         return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
                                                       'tipo': type(e)})  # , context_instance=RequestContext(request)
 
-
+@user_passes_test(grupo_check)
+@login_required
 def someError(request):
     return render_to_response('errorGeneral.html', context_instance=RequestContext(request))
-
-
-def grupo_check(user, gr=[]):
-    # print(GruposLoguin.objects.all())
-    var = GruposLoguin.objects.all()
-    if hasattr(user, 'ldap_user'):
-
-        try:
-            nombreGrupo = user.ldap_user.attrs['memberof'][0]
-        except:
-            nombreGrupo = user.ldap_user.attrs['distinguishedname'][0]
-
-        # usuarioldap = user.ldap_user
-        # if hasattr(usuarioldap,"attrs"):
-        #     nombreGrupo = user.ldap_user.attrs['memberof'][0]
-        # else:
-        #     nombreGrupo = user.ldap_user.dn
-
-        nombreGrupo = nombreGrupo.replace(' ', '')
-    else:
-        return True
-
-    # for property, value in vars(user.ldap_user).iteritems():
-    #     print property, ": ", value
-
-    for grupo in var:
-
-        grupoAux = grupo.nombre.replace(' ', '')
-        if grupoAux in nombreGrupo:
-            gr.append(grupo.nombre)
-            return True
-
-    return False
 
 
 def loginView(request):
@@ -352,7 +366,7 @@ def loginView(request):
                     if grupo_check(user, grupo):
                         if user.is_active:
                             login(request, user)
-                            request.session['userID'] = user.id
+                            request.session['userID'] = user
                             request.session['nombreUsuario'] = username
                             inicializarVariables(request)
 
@@ -383,6 +397,7 @@ def loginView(request):
                               context_instance=RequestContext(request))
 
 
+@user_passes_test(grupo_check)
 @login_required
 def view_in_pdf(request):
     if (request.session['agrupacion'] == 'Totales'):  # Si se agrupa por totales quiere decir que es otro informe.
@@ -395,6 +410,10 @@ def view_in_pdf(request):
     elif request.session['agrupacion'] == 'Cliente':
         lista = request.session['listaCCA_Grupo']
         template_name = "reportesEstadisticos/reportesFormasPago/formasDePagoPDF.html"
+
+    elif request.session['agrupacion'] == 'CapturadorIVA':
+        lista = request.session['data']
+        template_name = "CapturadoresIva/correctosIncorrectosIVA-PDF.html"
 
     elif request.session['agrupacion'] == 'VentaNetaAnual':  # Informa de ventas anuales de publicidad
 
@@ -522,6 +541,7 @@ def fetch_resources(uri, rel):
     return path
 
 
+@user_passes_test(grupo_check)
 @login_required
 def viewToXls(request):
     resguardoTitulo = request.session['titulo']
@@ -734,6 +754,7 @@ def viewToXls(request):
             sheet.write(1, 4, datetime.now(), estilo2)
 
             marcarFilaConTotales = 0
+            print data[0].keys()
             for i, row_data in enumerate(data, start=7):  # start from row no.6
                 for j, col in enumerate(keys):
                     e = row_data[col]
@@ -915,7 +936,7 @@ def dictfetchall(cursor):
         for row in cursor.fetchall()
     ]
 
-
+@user_passes_test(grupo_check)
 @login_required
 def json_test(request):
     results = request.session['lista_resultados']
@@ -942,6 +963,7 @@ def json_test(request):
     return HttpResponse(jsony, content_type='application/json')
 
 
+@user_passes_test(grupo_check)
 @login_required
 def json_testA(request):
     results = request.session['lista_ccA']
@@ -983,7 +1005,7 @@ def json_testA(request):
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
 @login_required
 def json_testGrupo(request):
     results = request.session['listaCCA_Grupo']
@@ -1006,6 +1028,7 @@ def json_testGrupo(request):
     return HttpResponse(jsony, content_type='application/json')
 
 
+@user_passes_test(grupo_check)
 @login_required
 def json_totales(request):
     results = request.session['lista_totales']
@@ -1023,7 +1046,8 @@ def json_totales(request):
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def json_ventasNetasAnuales(request):
     listaTotal = request.session['lista_resultados']
 
@@ -1049,19 +1073,22 @@ def json_ventasNetasAnuales(request):
     jsony = json.dumps(listaTotal)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def json_graficostotales(request):
     results = request.session['lista_grafico_recydesc']
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def json_graficosFormasDePagoPorCms(request):
     results = request.session['listaParaGraficosPorFormasDePago']
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def jsonPromociones(request):
     results = request.session['listaPromociones']
 
@@ -1085,35 +1112,42 @@ def jsonPromociones(request):
     jsony = json.dumps(promocionesSinConvenios)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def jsonCapturadoresIva(request):
     result = request.session['data']
-    resultGrid = []
-    for data in result:
-        data.pop('fechaHoraCaptura', None)
-        resultGrid.append(data)
+    # resultGrid = []
+    # for data in result:
+    #     data.pop('fechaHoraCaptura', None)
+    #     resultGrid.append(data)
+
 
 
     #########   Variables para Excel    ################################
 
 
     request.session['keys'] = ["AgenciaCliente", "CodigoAviso", "Aviso", "centimetros", "ValorSinImpuestos",
-                               "fechaHoraCaptura", "OrdenPublicidad", "nombre", "TasaIVA", "NombreUsuario", 'revision']
+                               "fechaHoraCaptura", "OrdenPublicidad", "nombre", "TasaIVA", "NombreUsuario", 'revision', 'verifica']
 
     request.session['headers'] = ["Agencia Cliente", "Cod Aviso", "Aviso", "Centimetros", "Valor sin Imp", "Captura",
-                                  "Orden Publicidad", "Forma de Pago", "Tasa IVA", "Nombre Usuario", 'Revision']
+                                  "Orden Publicidad", "Forma de Pago", "Tasa IVA", "Nombre Usuario", 'Revision', 'IVA']
 
     #########################################################
-    jsony = json.dumps(resultGrid)
+    # jsony = json.dumps(resultGrid)
+    jsony = json.dumps(result, default=date_handler)
     return HttpResponse(jsony, content_type='application/json')
 
+def date_handler(obj):
+    return obj.isoformat() if hasattr(obj, 'isoformat') else obj
 
+@user_passes_test(grupo_check)
 @login_required
 def listaCtaCteA(request):
     return render_to_response('reportesEstadisticos/reportesFormasPago/listaCtaCteA.html',
                               context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
+@login_required
 def cuentaCorrienteB(request):
     return render_to_response('reportesEstadisticos/reportesFormasPago/cuentaCorrienteBruto.html',
                               {'lista': request.session['lista_resultados']},
@@ -1410,7 +1444,8 @@ def cuentaCorrienteA(request):
                               {'agrupacion': agrupacion, 'fechaDesde': fechaDesde, 'fechaHasta': fechaHasta,
                                'codigoRemoto': codigoRemoto, 'tit': tit}, context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
+@login_required
 def ajaxGruposCuentaCorriente(request, lista, titulo, agrupacion):
     # 1: tipo de Aviso     ---------------------  2: Tipo de cliente  -------------- 3: No resumido
     if agrupacion == u'1':
@@ -1609,6 +1644,7 @@ def ajaxGruposCuentaCorriente(request, lista, titulo, agrupacion):
         return listaPorCliente
 
 
+@user_passes_test(grupo_check)
 @login_required
 def grupo(request):
     listaInterior = []
@@ -1712,7 +1748,7 @@ def grupo(request):
                                'codigoRemoto': codigoRemoto, 'tit': tit},
                               context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
 @login_required
 def ventasMensuales(request):
     try:
@@ -2007,7 +2043,8 @@ def ventasMensuales(request):
         return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
                                                       'tipo': type(e)})  # , context_instance=RequestContext(request)
 
-
+@user_passes_test(grupo_check)
+@login_required
 def cargarVentasTotales(request, codigoRemoto):
     cursor = connections['default'].cursor()
 
@@ -2059,7 +2096,8 @@ def cargarVentasTotales(request, codigoRemoto):
 
     request.session['lista_resultados'] = listaTotal
 
-
+@user_passes_test(grupo_check)
+@login_required
 def formVentasNetasAnuales(request):
     if request.method == 'POST':
         formulario = formVentaNetaAnual(request.POST)
@@ -2081,7 +2119,8 @@ def formVentasNetasAnuales(request):
     return render_to_response('reportesEstadisticos/ventaNetaAnual/formVentaNetaAnual.html', {'formulario': formulario},
                               context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
+@login_required
 def guardarTotales(request):
     if request.session['puedeGuardarMes']:
 
@@ -2194,7 +2233,8 @@ def guardarTotales(request):
     return render_to_response('reportesEstadisticos/ventaNetaAnual/ventaNetaAnual.html',
                               context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
+@login_required
 def obtenerIdRegVentasNetasAnuales(mes, anio, codigoRemoto):
     cursor2 = connections['default'].cursor()
     cursor2.execute(
@@ -2208,7 +2248,8 @@ def obtenerIdRegVentasNetasAnuales(mes, anio, codigoRemoto):
 
     return id
 
-
+@user_passes_test(grupo_check)
+@login_required
 def enviarCorreoAjax(request):
     if request.method == 'POST' and request.is_ajax():  # request.POST.has_key('client_response'):
 
@@ -2362,7 +2403,8 @@ def enviarCorreoAjax(request):
     return render_to_response('reportesEstadisticos/ventaNetaAnual/ventaNetaAnual.html',
                               context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
+@login_required
 def detalleCmsVendidosyCedidos(request):
     if request.session['listaParaGraficoPorFormaDePago'] != 0:
         listaBruta = request.session['listaParaGraficoPorFormaDePago']
@@ -2531,7 +2573,8 @@ def detalleCmsVendidosyCedidos(request):
     else:
         return HttpResponseRedirect('/ventasMensuales')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def detalleRecargosyDescuentos(request):
     if request.session['diccionarioRecyDesc'] != 0:
 
@@ -2585,7 +2628,8 @@ def detalleRecargosyDescuentos(request):
         return HttpResponseRedirect('/ventasMensuales')
 
 
-# ################################### Comienzo del Indicador Resportes de Promociones ########################################################
+@user_passes_test(grupo_check)
+@login_required
 def viewFormPromociones(request):
     # try:
     if request.method == 'POST':
@@ -2662,7 +2706,8 @@ def viewFormPromociones(request):
     # return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
     #                                                   'tipo': type(e)})  # , context_instance=RequestContext(request)
 
-
+@user_passes_test(grupo_check)
+@login_required
 def promociones(request):
     if request.session['listaPromociones'] != 0:
         lista2x1 = []
@@ -2870,7 +2915,8 @@ def promociones(request):
     else:
         return HttpResponseRedirect('/promociones/formPromociones')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def json_GrupoPromociones(request):
     results = request.session['listaPromocionesGrupo']
     # request.session['titulo'] = 'Todas las Promociones'
@@ -2878,18 +2924,21 @@ def json_GrupoPromociones(request):
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def json_AvisosFacturadosYPublicados(request):
     results = request.session['lista_resultados']
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
 
 
+@user_passes_test(grupo_check)
 @login_required
 def listaPromociones(request):
     return render_to_response('reportesDePromociones/listaPromociones.html', context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
+@login_required
 def jsonTotalVendedorxHora(request):
     listaVendedorHora = request.session['listaVendedorHora']
 
@@ -2957,7 +3006,8 @@ def jsonTotalVendedorxHora(request):
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def jsonTotalVendedorxHoraAjax(request):
     results = request.session['listaVendedorHoraSegunFormaDePago']
 
@@ -2969,7 +3019,8 @@ def jsonTotalVendedorxHoraAjax(request):
     jsony = json.dumps(results)
     return HttpResponse(jsony, content_type='application/json')
 
-
+@user_passes_test(grupo_check)
+@login_required
 def viewFormVentasCaptura(request):
     # try:
     if request.method == 'POST':
@@ -3065,12 +3116,12 @@ def viewFormVentasCaptura(request):
     # return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
     #                                                   'tipo': type(e)})  # , context_instance=RequestContext(request)
 
-
+@user_passes_test(grupo_check)
 @login_required
 def listaDiayHora(request):
     return render_to_response('reportesDeVentasDiayHora/listaDiayHora.html', context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
 @login_required
 def capturaDiayHora(request):
     if request.session['listaCaptura'] != 0:
@@ -3271,12 +3322,12 @@ def capturaDiayHora(request):
     else:
         return HttpResponseRedirect('/ventasDiayHora/formVentasCaptura')
 
-
+@user_passes_test(grupo_check)
 @login_required
 def listaVentasPorVendedor(request):
     return render_to_response('reportesVendedor/listaVentasPorVendedor.html', context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
 @login_required
 def formVentasVendedor(request):
     try:
@@ -3358,7 +3409,7 @@ def formVentasVendedor(request):
         return HttpResponseRedirect('/errorGeneral', {'mensaje': e.message,
                                                       'tipo': type(e)})  # , context_instance=RequestContext(request)
 
-
+@user_passes_test(grupo_check)
 @login_required
 def ventasVendedorPorHora(request):
     if request.session['listaBrutaParaVendedores'] != 0:
@@ -3522,7 +3573,7 @@ def ventasVendedorPorHora(request):
     else:
         return HttpResponseRedirect('/reportesVendedor/formVentasVendedor')
 
-
+@user_passes_test(grupo_check)
 @login_required
 def ajaxVendedorHoraFormasDePago(request):
     listaVendedorHora = request.session['listaBrutaParaVendedores']
@@ -3890,7 +3941,7 @@ def ajaxVendedorHoraFormasDePago(request):
                                                                       'codigoRemoto': codigoRemoto, 'tit': tit},
                               context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
 @login_required
 def ventasVendedorPorFormaPago(request):
     if request.session['listaBrutaParaVendedores'] != 0:
@@ -4294,7 +4345,7 @@ def ventasVendedorPorFormaPago(request):
     else:
         return HttpResponseRedirect('/reportesVendedor/formVentasVendedor')
 
-
+@user_passes_test(grupo_check)
 @login_required
 def formAvisosPublicadosFacturados(request):
     if request.method == 'POST':
@@ -4419,7 +4470,8 @@ def formAvisosPublicadosFacturados(request):
                               {'formulario': formulario},
                               context_instance=RequestContext(request))
 
-
+@user_passes_test(grupo_check)
+@login_required
 def formFacturasMensuales(request):
     if request.method == 'POST':
         formulario = formPromociones(request.POST)
@@ -4542,8 +4594,8 @@ def formFacturasMensuales(request):
     return render_to_response('reportesFacturas/facturasTotales/formFacturasMensuales.html', {'formulario': formulario},
                               context_instance=RequestContext(request))
 
-
 @user_passes_test(grupo_check)
+@login_required
 def formCapturadoresIva(request):
     if request.method == 'POST':
         formulario = formVentasCaptura(request.POST)
@@ -4586,24 +4638,30 @@ def formCapturadoresIva(request):
             request.session['fechaDesde'] = fechaDesdeModoLatino
             request.session['fechaHasta'] = fechaHastaModoLatino
 
-            cursor.execute("select * from EstadisticasAvisosConTasaIVA(%s,%s,%s)", (fechaDesde, fechaHasta, codRemoto))
+            formaDePago = formulario.cleaned_data['formaDePago']
+            if formaDePago == u'1':
+                formaDePago = 4
+            else:
+                formaDePago = 1
+
+            cursor.execute("select * from EstadisticasAvisosConTasaIVA(%s,%s,%s,%s)", (fechaDesde, fechaHasta, codRemoto, formaDePago))
             listaBruta = dictfetchall(cursor)
 
             listaIvaIncorrecto, listaIva = [], []
+            print listaBruta[0].keys()
             for data in listaBruta:
                 data['nombre'] = data['nombre'].replace(' ','')
                 if data['TasaIVA'] == 10.5 or data['TasaIVA'] == 21.0:
-                    data.update({'verifica': 'Correctos'})
+                    data.update({'verifica': 'Correcto'})
                     listaIva.append(data)
                 else:
-                    data.update({'verifica': 'Incorrectos'})
+                    data.update({'verifica': 'Incorrecto'})
                     listaIvaIncorrecto.append(data)
 
             tit = 'Control Tasa de IVA de Avisos'
             request.session['data'] = listaIva + listaIvaIncorrecto
+            request.session['agrupacion'] = 'CapturadorIVA'
             request.session['titulo'] = tit
-
-            print request.session['data']
 
             # lista_resumida = json.dumps(lista_resumida, cls=DjangoJSONEncoder)
             return render_to_response('CapturadoresIva/capturadoresIVA.html', {'tit': tit,

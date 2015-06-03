@@ -11,13 +11,12 @@
 {%block contenido %}
 
   <main id="centro">
-      <h2>Bienvendios al sistema del futuro</h2>
-        <h2>{{ grupo.0 }}</h2>
+      <h2>Bienvendo al Sistema de Reportes</h2>
 <div id="cuadrilla">
     <ul class="nav nav-justified">
 
         {%   if grupo.0 == 'Departamento Sistemas' or grupo.0 == 'todo' %}
-            <li><a href="/menuPrincipal.html" style="padding:10px 0px" id="reportesEstadisticosNorte" onmouseover="muestra(id)" onmouseout="fuera(id)">Reportes Estad&iacute;sticas Norte</a></li>
+            <li><a href="/inicioReportes/" style="padding:10px 0px" id="reportesEstadisticosNorte" onmouseover="muestra(id)" onmouseout="fuera(id)">Reportes Estad&iacute;sticas Norte</a></li>
         {% endif %}
         {% if grupo.0 == 'Grupo SIREPA - Carga' or grupo.0 == 'todo'  %}
             <li><a  href="/capturadoresIva/formCapturadoresIva/" style="padding:10px 0px" id="controlAvisos" onmouseover="muestra(id)" onmouseout="fuera(id)">Control de Avisos </a></li>
