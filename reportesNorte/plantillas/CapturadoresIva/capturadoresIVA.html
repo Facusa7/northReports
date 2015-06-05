@@ -59,6 +59,27 @@
 
 <input type="text" id="tit" style="display:none" value={{titulo}} />
 
+<div class="gruopingContent">
+     <p>
+        <ul>
+            <li><label for="id_agruparPor_0">
+                    <input id="id_agruparPor_0" name="agruparPor" type="radio" value="1" checked/>Todos
+                </label>
+            </li>
+
+            <li><label for="id_agruparPor_1">
+                    <input id="id_agruparPor_1" name="agruparPor" type="radio" value="2" /> Correctos
+                </label>
+            </li>
+
+            <li><label for="id_agruparPor_2">
+                    <input id="id_agruparPor_2" name="agruparPor" type="radio" value="3"/> Incorrectos
+                </label>
+            </li>
+        </ul>
+     </p>
+ </div>
+
 <main id="centroGrid">
 <div id='promocionSinResumir' align="center">
 
@@ -66,11 +87,12 @@
         <table id="gridpager" class="scroll" style="text-align: center;"> </table>
 </div>
 
-<!--<div id='cuentaCorrienteAgrupadoPor' style="display:none;" align="center">-->
+    <div id='gridAgrupadoPor' style="display:none;" align="center">
 
-    <!--<table id="listXAviso" class="gridTotales"></table>-->
-<!--</div>-->
-    <!--<div id="result" align="center"></div>-->
+        <table id="listXAviso" class="gridTotales"></table>
+    </div>
+
+      <div id="result" align="center"></div>
 
 
 </main>
@@ -147,24 +169,181 @@ function currencyFmatter2 (cellvalue, options, rowObject)
 
 jQuery("#list").jqGrid('navGrid','#list',{add:false,edit:false,del:false});
 
+$('input:radio[name=agruparPor]').click(function() {
+        var agrupacion = 1;
+        if ($('input:radio[id=id_agruparPor_1]:checked').val()){
+            agrupacion = 2;
+        } else { if ($('input:radio[id=id_agruparPor_2]:checked').val()){
+                    agrupacion = 3;
+                }
+        }
+        if (agrupacion == 2  || agrupacion == 3) {
+            if ($('#promocionSinResumir').is(':visible')){
+                             $('#promocionSinResumir').hide();
+            }
+            console.log(agrupacion)
+            $.ajax({
+                url : "/capturadoresIva/formCapturadoresIva/",
+                type : "POST",
+                dataType: "json",
+                data : {
+                    iva : agrupacion,
+                    tit: tit,
 
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success : function(json) {
+
+                        var dataResult = json.result
+                        obj = $.parseJSON(dataResult)
+                        console.log(obj)
+                        if (obj.length  == 0){
+                            $('#result').text( 'No hay Avisos '+ json.tit);
+                        }else {
+                            $('#gridAgrupadoPor').show();
+
+                            // ###############JqGrid de Cuenta Corriente resumido  por Ajax##########
+                            $("#listXAviso").jqGrid({
+
+                                datatype: 'local',
+                                mtype: 'GET',
+                                colNames: ["Cod Aviso", 'Version', "Ag Cliente", "Aviso", "Centimetros", "Valor sin Impuestos", "Orden Publicidad", "Forma Pago", "Tasa IVA", "Usuario"],
+                                colModel: [
+                                    {name: 'CodigoAviso', index: 'CodigoAviso', width: 100},
+                                    {name: 'revision', index: 'revision', width: 50},
+                                    {name: 'AgenciaCliente', index: 'AgenciaCliente', width: 200},
+
+                                    {name: 'Aviso', index: 'Aviso', width: 120},
+                                    {
+                                        name: 'centimetros',
+                                        index: 'centimetros',
+                                        align: "center",
+                                        sorttype: 'number',
+                                        formatter: currencyFmatter2,
+                                        summaryType: 'sum',
+                                        width: 100
+                                    },
+                                    {
+                                        name: 'ValorSinImpuestos',
+                                        index: 'ValorSinImpuestos',
+                                        align: "center",
+                                        sorttype: 'number',
+                                        formatter: currencyFmatter2,
+                                        summaryType: 'sum',
+                                        width: 100
+                                    },
+                                    {name: 'OrdenPublicidad', index: 'OrdenPublicidad', width: 100},
+                                    {name: 'nombre', index: 'nombre', width: 100},
+                                    {
+                                        name: 'TasaIVA',
+                                        index: 'TasaIVA',
+                                        align: "center",
+                                        sorttype: 'number',
+                                        formatter: currencyFmatter2,
+                                        width: 100
+                                    },
+                                    {name: 'NombreUsuario', index: 'NombreUsuario', width: 150}
+                                ],
+                                rowNum: -1,
+                                height: 'auto',
+                                sortorder: 'desc',
+                                viewrecords: true,
+
+
+                                footerrow: true,
+                                userDataOnFooter: true,
+                                //caption: 'Cuenta Corriente Resumido por ' + primeraColumna,
+                                caption: 'Avisos ' + json.tit
+
+                            });
+
+                            var mydata = [];
+
+                            var names = ["CodigoAviso", "revision", "AgenciaCliente", "Aviso", "centimetros",
+                                "ValorSinImpuestos", "OrdenPublicidad", "nombre", "TasaIVA", "NombreUsuario"];
+                            for (var i = 0; i < obj.length; i++) {
+                                mydata[i] = {};
+                                mydata[i][names[0]] = obj[i]['CodigoAviso'];
+                                mydata[i][names[1]] = obj[i]['revision'];
+                                mydata[i][names[2]] = obj[i]['AgenciaCliente'];
+                                mydata[i][names[3]] = obj[i]['Aviso'];
+                                mydata[i][names[4]] = obj[i]['centimetros'];
+                                mydata[i][names[5]] = obj[i]['ValorSinImpuestos'];
+                                mydata[i][names[6]] = obj[i]['OrdenPublicidad'];
+                                mydata[i][names[7]] = obj[i]['nombre'];
+                                mydata[i][names[8]] = obj[i]['TasaIVA'];
+                                mydata[i][names[9]] = obj[i]['NombreUsuario'];
+
+                            }
+
+
+                            for (var i = 0; i <= mydata.length; i++) {
+                                $("#listXAviso").jqGrid('addRowData', i + 1, mydata[i]);
+                            }
+
+
+                            $('#result').text('');
+                        }
+                    },
+                    beforeSend: function(){
+                        $('#listXAviso').jqGrid('GridUnload'); // Esto es para que recargue el grid con el contenido.
+                         $('#grafico').hide();
+                        $('#result').text( 'Aguarde...');
+
+                    },
+                    error : function(xhr,errmsg,err) {
+                        //$('#barraProgreso').hide();
+                        $('#result').text( '');
+                        //alert(xhr.status + ": " + xhr.responseText); //debug = True
+                        alert('Lo sentimos, ha sucedido un error para obtener los datos.');//debug = False
+                    }
+
+            });
+
+        }else {
+            if ($('#gridAgrupadoPor').is(':visible')){
+                 $('#gridAgrupadoPor').hide();
+            }
+            $.ajax({
+                url : "/capturadoresIva/formCapturadoresIva/",
+                type : "POST",
+                dataType: "json",
+                data : {
+                    iva : agrupacion,
+                    tit: tit,
+
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success : function(json) {
+                        $('#promocionSinResumir').show();
+                        $('#result').text('');
+                    },
+                    beforeSend: function(){
+                        $('#listXAviso').jqGrid('GridUnload'); // Esto es para que recargue el grid con el contenido.
+
+                        $('#result').text( 'Aguarde...');
+
+                    },
+                    error : function(xhr,errmsg,err) {
+                        //$('#barraProgreso').hide();
+                        $('#result').text( '');
+                        // the first alert is only for developers
+                        //alert(xhr.status + ": " + xhr.responseText); //debug = True
+                        alert('Lo sentimos, ha sucedido un error para obtener los datos.');//debug = False
+                    }
+
+            });
+        }
+
+});
 
 
 </script>
 
 
-{% block grafico %}
 
 
-<script src="{{STATIC_URL}}js/highcharts.js"></script>
-<script src="{{STATIC_URL}}js/highcharts-3d.js"></script>
-<script src="{{STATIC_URL}}js/modules/exporting.js"></script>
 
-  <center>
-
-   <div align="center" style="margin-top:3%; width:70%;background-color: #fff;" id="graficoPromociones"></div>
-</center>
-{% endblock %}
 
 
     {% block navegacion %}

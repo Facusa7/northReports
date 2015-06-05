@@ -67,7 +67,7 @@
 
                     <ul id="menu" class="dropdown dropdown-horizontal">
                             <li><a href="/">Inicio</a></li>
-                          {% if user.ldap_user == None or 'Departamento Sistemas' in user.ldap_user.dn %}
+                          {% if user.ldap_user == None or 'departamento sistemas' in user.ldap_user.dn %}
                             <li><a href="/menuReportesEstadisticos/" class="dir">Reportes Estad&iacute;sticos</a>
                                 <ul class="subIndice">
                                     <li><a href="/reportesFormasDePago/">Reportes seg&uacute;n Formas de Pago</a></li>

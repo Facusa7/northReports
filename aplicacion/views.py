@@ -33,7 +33,7 @@ from aplicacion.forms import DatosEntradaScriptForm, formLogin, formTotalVentaPu
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext, Context
-from aplicacion.models import GruposLoguin
+from aplicacion.models import GruposLoguin, MetodosSirepa
 from reportesNorte import settings
 
 from dateutil import relativedelta as rdelta
@@ -66,11 +66,10 @@ def grupo_check(user, gr=[]):
         except:
             nombreGrupo = user.ldap_user.attrs['distinguishedname'][0]
 
-        # usuarioldap = user.ldap_user
-        # if hasattr(usuarioldap,"attrs"):
-        #     nombreGrupo = user.ldap_user.attrs['memberof'][0]
-        # else:
-        #     nombreGrupo = user.ldap_user.dn
+        # print GruposLoguin.objects.filter(MetodosSirepa__id=1)
+        # print GruposLoguin.objects.filter(metodos_permitidos__nombre_metodo__startswith="form").count()
+        # users_in_1zone = MetodosSirepa.objects.filter(GruposLoguin == nombreGrupo)
+        # print users_in_1zone
 
         nombreGrupo = nombreGrupo.replace(' ', '')
     else:
@@ -138,6 +137,8 @@ def inicializarVariables(request):
     request.session['listaVendedorHora'] = 0
     request.session['listaBrutaParaVendedores'] = 0
     request.session['detalleRecargosyDescuentos'] = 0
+    request.session['data_correctos'] = ''
+    request.session['data_incorrectos'] = ''
 
 
 def transformacionGenerica(data):
@@ -754,7 +755,6 @@ def viewToXls(request):
             sheet.write(1, 4, datetime.now(), estilo2)
 
             marcarFilaConTotales = 0
-            print data[0].keys()
             for i, row_data in enumerate(data, start=7):  # start from row no.6
                 for j, col in enumerate(keys):
                     e = row_data[col]
@@ -3851,7 +3851,7 @@ def ajaxVendedorHoraFormasDePago(request):
 
 
 
-            # Todo lo siguiente comentadado lo hago para mostrar los totalizadores por hora en el excel como se muestran en el jqgrid.
+            #lo siguiente comentadado lo hago para mostrar los totalizadores por hora en el excel como se muestran en el jqgrid.
 
             totalesDeHora = []
             totalCms = 0
@@ -4597,7 +4597,33 @@ def formFacturasMensuales(request):
 @user_passes_test(grupo_check)
 @login_required
 def formCapturadoresIva(request):
-    if request.method == 'POST':
+
+    if request.method == 'POST' and request.is_ajax():
+        iva = request.POST["iva"]
+        a = request.session['data_correctos'] +request.session['data_incorrectos']
+        result,tit = [],''
+
+        if iva == '1':
+            result = a
+        elif iva == '2': #only corrects
+            tit = 'Correctos'
+
+            for data in a:
+                print data['verifica']
+                if data['verifica'] == 'Correcto':
+                    result.append(data)
+        else:
+            tit = 'Incorrectos'
+            for data in a:
+                if data['verifica'] == 'Incorrecto':
+                    result.append(data)
+
+        request.session['data'] = result
+        result = json.dumps(result, cls=DjangoJSONEncoder)
+        return HttpResponse(json.dumps({'tit': tit, 'result': result}), content_type='application/javascript')
+
+
+    elif request.method == 'POST':
         formulario = formVentasCaptura(request.POST)
 
         if formulario.is_valid():
@@ -4641,16 +4667,23 @@ def formCapturadoresIva(request):
             formaDePago = formulario.cleaned_data['formaDePago']
             if formaDePago == u'1':
                 formaDePago = 4
+                formita = 'Cuenta Corriente'
             else:
                 formaDePago = 1
+                formita = 'Contado'
 
             cursor.execute("select * from EstadisticasAvisosConTasaIVA(%s,%s,%s,%s)", (fechaDesde, fechaHasta, codRemoto, formaDePago))
             listaBruta = dictfetchall(cursor)
 
             listaIvaIncorrecto, listaIva = [], []
-            print listaBruta[0].keys()
+
             for data in listaBruta:
                 data['nombre'] = data['nombre'].replace(' ','')
+                #############this_is_for_delete_the _fucking _c#digoUsuario _key################
+                # for x in data.keys():
+                #     if x.endswith('digoUsuario'):
+                #         data.pop(x, None)
+                #################################
                 if data['TasaIVA'] == 10.5 or data['TasaIVA'] == 21.0:
                     data.update({'verifica': 'Correcto'})
                     listaIva.append(data)
@@ -4658,16 +4691,18 @@ def formCapturadoresIva(request):
                     data.update({'verifica': 'Incorrecto'})
                     listaIvaIncorrecto.append(data)
 
-            tit = 'Control Tasa de IVA de Avisos'
-            request.session['data'] = listaIva + listaIvaIncorrecto
+            tit = 'Control Tasa de IVA de Avisos de '+formita
+            a = listaIva + listaIvaIncorrecto
+            request.session['data'] = a
+            request.session['data_correctos'] = listaIva
+            request.session['data_incorrectos'] = listaIvaIncorrecto
             request.session['agrupacion'] = 'CapturadorIVA'
             request.session['titulo'] = tit
-
-            # lista_resumida = json.dumps(lista_resumida, cls=DjangoJSONEncoder)
             return render_to_response('CapturadoresIva/capturadoresIVA.html', {'tit': tit,
                                                                                'fechaDesde': fechaDesdeModoLatino,
                                                                                'fechaHasta': fechaHastaModoLatino,
                                                                                'codigoRemoto': codigoremoto},
+
                                       context_instance=RequestContext(request))
 
     else:
